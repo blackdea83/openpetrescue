@@ -1,0 +1,12 @@
+# Betriebs-/Zugangsdaten haben in diesem Repo nichts verloren
+*.log
+*.bak
+*.bak-*
+.env
+.DS_Store
+Thumbs.db
+
+# lokale Editor-/Tool-Dateien
+.idea/
+.vscode/
+*.swp

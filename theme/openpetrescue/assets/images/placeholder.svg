@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-label="Platzhalterbild">
+  <rect width="800" height="600" fill="#1b2b38"/>
+  <g fill="none" stroke="#3d5668" stroke-width="6">
+    <circle cx="400" cy="270" r="70"/>
+    <path d="M330 400c0-45 32-78 70-78s70 33 70 78"/>
+  </g>
+  <text x="400" y="500" font-family="system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif"
+        font-size="30" fill="#7d94a4" text-anchor="middle">Platzhalterbild – eigenes Bild einsetzen</text>
+</svg>

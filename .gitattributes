@@ -1,0 +1,10 @@
+# Einheitliche Zeilenenden fuer alle Textdateien. Ohne das bekommen
+# Windows-Klone CRLF, was u. a. die Pruef-Suite (exakte Textvergleiche)
+# fehlschlagen laesst.
+* text=auto eol=lf
+
+*.woff2 binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.webp  binary
