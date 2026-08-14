@@ -1,6 +1,4 @@
-<p align="center">
-  <img src="assets/openpetrescue-logo.png" alt="OpenPetRescue" width="560">
-</p>
+
 
 # OpenPetRescue
 
