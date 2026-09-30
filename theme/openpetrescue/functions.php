@@ -7,6 +7,14 @@ if (!defined('ABSPATH')) {
 
 require_once get_template_directory() . '/inc/i18n.php';
 require_once get_template_directory() . '/inc/translations.php';
+// Module (September 2026). Jedes Modul hat einen eigenen Schalter, siehe README.
+require_once get_template_directory() . '/inc/content-i18n.php';
+require_once get_template_directory() . '/inc/content-i18n-google.php';
+require_once get_template_directory() . '/inc/stories.php';
+require_once get_template_directory() . '/inc/share.php';
+require_once get_template_directory() . '/inc/rescue-counter.php';
+require_once get_template_directory() . '/inc/hero-new.php';
+require_once get_template_directory() . '/inc/mobile-v2.php';
 
 function sod_theme_setup(): void
 {
@@ -118,6 +126,14 @@ function sod_theme_assets(): void
         'sod-legacy-pages',
         get_template_directory_uri() . '/assets/js/legacy-pages.js',
         ['sod-theme'],
+        $theme->get('Version'),
+        true
+    );
+    // Externe Videos (YouTube/Instagram): einmal zustimmen, danach Autoplay ohne Ton.
+    wp_enqueue_script(
+        'sod-external-media',
+        get_template_directory_uri() . '/assets/js/external-media.js',
+        [],
         $theme->get('Version'),
         true
     );

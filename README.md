@@ -20,6 +20,17 @@ OpenPetRescue ist aus der praktischen Arbeit von **Shield of Dogs** entstanden. 
 - Öffentliche Seiten für Vermittlung, Patenschaften und Spenden bereitstellen – dreisprachig (Deutsch, Englisch, Bosnisch)
 - Am Handy als installierbare Mitarbeiter-App (PWA) arbeiten
 - Daten aus bestehenden JSON-Dateien importieren
+- **Schicksale:** Geschichten der Tiere in Kapiteln, mit den passenden YouTube-Videos zu jedem Kapitel (wöchentlich automatisch aktualisiert)
+- **Handy-Ansicht:** Leiste unten (Start · Schicksale · Adoptieren · Pate werden · Spenden), Schnellstart, wischbare Tierkarten
+- **Hero der Startseite** mit wechselnden Tieren, die gerade Paten suchen
+- **Teilen-Funktion** für Tiere und die ganze Seite (WhatsApp, Facebook, Instagram, TikTok)
+- **Rettungs-Zähler** auf der Startseite
+- **Übersetzung eigener Inhalte** (Hundetexte, Geschichten) ins Englische und Bosnische – per Wörterbuch oder automatisch mit Google Cloud Translation
+- **Finanzbericht** aufgeschlüsselt nach Einmalspenden und Patenschaften sowie nach Zahlungsweg (PayPal, Bank, Sonstige)
+- **Dankes-Mail** nach jeder Spende mit Hinweis auf Tiere, die Paten suchen
+- **Dashboard** mit Paten, Finanzen, neuen Patenschaften, Anfragen und Support-Meldungen
+- Checkbox **„Verstorben“** beendet alle Patenschaften eines Tieres und schickt dem Team eine Liste
+- Video-Upload nur in Formaten, die überall abspielbar sind (MP4/WebM, kein HEVC)
 
 ## Was bewusst *nicht* enthalten ist
 
@@ -61,6 +72,21 @@ Dieses Repository enthält **keine** Vereinsdaten, keine personenbezogenen Daten
 - **Überweisung / Dauerauftrag:** IBAN und BIC unter *Organisation* eintragen. Der QR-Code auf der Spendenseite wird daraus erzeugt.
 
 > Für die QR-Code-Erzeugung wird ein externer Dienst aufgerufen. Wer ihn nutzt, muss ihn in der eigenen Datenschutzerklärung nennen – oder stattdessen ein eigenes QR-Bild hinterlegen.
+
+## Neue Funktionen ein- und ausschalten
+
+Größere Neuerungen sind anfangs nur für eingeloggte Admins sichtbar. So kannst du sie auf der echten Seite ansehen, bevor Besucher sie sehen.
+
+| Funktion | Wo einschalten | Option |
+| --- | --- | --- |
+| Handy-Ansicht | *Design → Mobile Ansicht* | `sod_mobile_v2` = `on` / `admin` / `off` |
+| Schicksale | *Hunde → Schicksale* | `sod_story_public` = `1` |
+| Neuer Hero | *Design → Hero der Startseite* | `sod_hero_new_public` = `1` |
+| Rettungs-Zähler | *Hunde → Rettungs-Zähler* | `sod_rescue_counter_public` = `1` |
+| Teilen-Funktion | *Hunde → Teilen-Funktion* | `sod_share_public` = `1` |
+| Automatische Übersetzung | *Hunde → Übersetzungen* | eigener Google-Cloud-API-Schlüssel |
+
+Für die Schicksale die Seite `geschichten` anlegen. Videos kommen aus einer YouTube-Playlist pro Tier (Feld im Bereich „Schicksal“).
 
 ## Tests
 

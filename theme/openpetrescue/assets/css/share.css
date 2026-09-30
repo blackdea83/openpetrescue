@@ -1,0 +1,49 @@
+/* Teilen-Funktion (inc/share.php) – Klassen sodsh-* */
+.sodsh-icon { width: 18px; height: 18px; flex: 0 0 auto; }
+
+/* Schwebender Button – ueber dem Hilfe-Button (#sod-support, unten rechts) */
+.sodsh-fab { position: fixed; right: 18px; bottom: 78px; z-index: 9989; display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(243,199,79,.7); border-radius: 999px; padding: 11px 16px; background: #0b1b29; color: #f3c74f; font: 800 14px/1 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; cursor: pointer; box-shadow: 0 10px 28px rgba(0,0,0,.35); }
+.sodsh-fab:hover { background: #204060; }
+.sodsh-fab em { font-style: normal; font-size: 10px; background: #e11d48; color: #fff; padding: 3px 6px; border-radius: 999px; }
+@media (max-width: 640px) {
+  .sodsh-fab { right: 12px; bottom: 70px; padding: 12px; }
+  .sodsh-fab span { display: none; }
+}
+
+/* Symbol auf Hundekarten */
+.sodsh-card-btn { position: absolute; top: 10px; right: 10px; z-index: 5; width: 40px; height: 40px; border-radius: 50%; border: 0; background: rgba(11,20,27,.78); color: #fff; display: grid; place-items: center; cursor: pointer; box-shadow: 0 6px 18px rgba(0,0,0,.35); }
+.sodsh-card-btn:hover, .sodsh-card-btn:focus-visible { background: #f3c74f; color: #0b141b; }
+
+/* Kasten auf der Hundeseite */
+.sodsh-box { margin: 22px 0; padding: 16px 18px; border-radius: 16px; background: linear-gradient(135deg, #17324a, #0b1824); border: 1px solid rgba(243,199,79,.3); color: #f8fafc; }
+.sodsh-box-title { display: block; font-size: 1.05rem; margin-bottom: 4px; }
+.sodsh-box p { margin: 0 0 12px; color: rgba(248,250,252,.78); font-size: .92rem; line-height: 1.5; }
+.sodsh-preview { display: inline-block; margin-bottom: 8px; background: #e11d48; color: #fff; font-size: .7rem; font-weight: 800; padding: 3px 9px; border-radius: 999px; }
+.sodsh-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+.sodsh-btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 13px; border-radius: 10px; border: 0; font: 800 .86rem/1 inherit; color: #fff; cursor: pointer; background: rgba(255,255,255,.1); }
+.sodsh-btn.is-wa { background: #128c4a; }
+.sodsh-btn.is-fb { background: #1b4fb8; }
+.sodsh-btn.is-ig { background: linear-gradient(45deg, #f09433, #dc2743 50%, #bc1888); }
+.sodsh-btn.is-tt { background: #111; box-shadow: inset 0 0 0 1px rgba(255,255,255,.2); }
+.sodsh-btn:hover { filter: brightness(1.1); }
+
+/* Fenster (Computer) */
+.sodsh-dialog { position: fixed; inset: 0; margin: auto; height: fit-content; width: min(420px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow-y: auto; padding: 20px; border: 1px solid rgba(243,199,79,.35); border-radius: 20px; background: #0b141b; color: #f8fafc; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+.sodsh-dialog::backdrop { background: rgba(3,8,12,.8); }
+.sodsh-close { position: absolute; right: 12px; top: 10px; width: 34px; height: 34px; border-radius: 50%; border: 0; background: rgba(255,255,255,.08); color: #f3c74f; font-size: 22px; cursor: pointer; }
+.sodsh-dialog-title { margin: 0 0 12px; font-size: 1.15rem; font-weight: 800; }
+.sodsh-card { display: flex; gap: 12px; background: #101c26; border: 1px solid rgba(255,255,255,.08); border-radius: 14px; padding: 10px; margin-bottom: 14px; }
+.sodsh-card img { width: 72px; height: 72px; border-radius: 10px; object-fit: cover; }
+.sodsh-card strong { display: block; font-size: .95rem; }
+.sodsh-card small { display: block; color: #94a3b8; font-size: .8rem; line-height: 1.4; margin-top: 2px; }
+.sodsh-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.sodsh-grid .sodsh-btn { justify-content: center; padding: 13px 8px; border-radius: 12px; }
+.sodsh-link { display: flex; gap: 8px; margin-top: 14px; }
+.sodsh-link input { flex: 1; min-width: 0; background: #101c26; border: 1px solid rgba(255,255,255,.16); border-radius: 10px; padding: 10px; color: #f8fafc; font-size: .82rem; }
+.sodsh-copy { border: 0; border-radius: 10px; padding: 0 14px; background: #f3c74f; color: #0b141b; font-weight: 800; cursor: pointer; white-space: nowrap; }
+
+/* Hinweis nach dem Kopieren (Instagram/TikTok) */
+.sodsh-toast { position: fixed; left: 50%; bottom: 24px; z-index: 100000; transform: translate(-50%, 20px); opacity: 0; max-width: min(460px, calc(100vw - 32px)); padding: 12px 16px; border-radius: 12px; background: #f8fafc; color: #0b141b; font: 600 .9rem/1.4 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; box-shadow: 0 14px 40px rgba(0,0,0,.4); transition: opacity .25s, transform .25s; }
+.sodsh-toast.is-on { opacity: 1; transform: translate(-50%, 0); }
+.sodsh-toast { display: flex; gap: 12px; align-items: center; }
+.sodsh-toast a { flex: 0 0 auto; background: #0b141b; color: #f3c74f; font-weight: 800; text-decoration: none; padding: 8px 12px; border-radius: 9px; }

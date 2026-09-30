@@ -1,0 +1,173 @@
+/* Neue Handy-Ansicht (30.09.2026). Wird nur unter 768 px geladen und nur mit body.sod-m2.
+   Abschalten: Verwaltung > Design > Mobile Ansicht. */
+/* Am Computer nie sichtbar */
+@media (min-width: 768px) {
+  .sod-m2-tabs, .sod-m2-storybar, .sod-m2-home { display: none !important; }
+}
+
+@media (max-width: 767px) {
+
+/* ---------- Leiste unten ---------- */
+body.sod-m2 { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
+body.sod-m2.sod-m2-story { padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
+.sod-m2-tabs {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 9980;
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+  padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+  background: rgba(6, 17, 26, .97); border-top: 1px solid rgba(255, 255, 255, .08);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+}
+.sod-m2-tab {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  min-height: 52px; color: #94a3b8 !important; text-decoration: none !important;
+  font: 600 10.5px/1.1 Inter, system-ui, sans-serif; letter-spacing: 0; text-align: center;
+}
+.sod-m2-tab svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.sod-m2-tab.is-on { color: #f3c74f !important; font-weight: 700; }
+.sod-m2-tab:active { transform: scale(.96); }
+
+/* Schicksal-Seite: statt Leiste zwei Hilfe-Buttons */
+.sod-m2-storybar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 9980;
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  background: rgba(6, 17, 26, .97); border-top: 1px solid rgba(255, 255, 255, .08);
+}
+.sod-m2-storybar a {
+  display: flex; align-items: center; justify-content: center; min-height: 52px; border-radius: 14px;
+  font: 800 15px/1 Inter, system-ui, sans-serif; text-decoration: none !important;
+}
+.sod-m2-storybar-main { background: #e4a91f; color: #06111a !important; }
+.sod-m2-storybar-alt { border: 1.5px solid rgba(248, 250, 252, .4); color: #f8fafc !important; }
+
+/* Hilfe-Button und App-Hinweis ueber die Leiste heben */
+body.sod-m2 #sod-support { bottom: calc(84px + env(safe-area-inset-bottom)) !important; }
+body.sod-m2.sod-m2-story #sod-support { bottom: calc(96px + env(safe-area-inset-bottom)) !important; }
+body.sod-m2 .sodsh-fab { bottom: calc(142px + env(safe-area-inset-bottom)) !important; }
+body.sod-m2.sod-m2-story .sodsh-fab { bottom: calc(154px + env(safe-area-inset-bottom)) !important; }
+
+/* Kopfzeile: Kontakt/Spenden-Knoepfe sind jetzt unten */
+body.sod-m2 .nav-actions .btn-ghost { display: none !important; }
+
+/* ---------- Startseite: Schnellstart ---------- */
+.sod-m2-home { padding: 14px 16px 8px; background: #0b141b; }
+.sod-m2-quick { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.sod-m2-quick a {
+  display: flex; flex-direction: column; justify-content: center; gap: 2px;
+  min-height: 64px; padding: 0 16px; border-radius: 16px; text-decoration: none !important;
+  font-family: Inter, system-ui, sans-serif;
+}
+.sod-m2-quick strong { font-size: 16px; font-weight: 800; }
+.sod-m2-quick span { font-size: 13px; font-weight: 600; }
+.sod-m2-quick-main { background: #e4a91f; color: #06111a !important; }
+.sod-m2-quick-main span { color: #3b2a05; }
+.sod-m2-quick-alt { border: 1.5px solid rgba(248, 250, 252, .35); color: #f8fafc !important; }
+.sod-m2-quick-alt span { color: #94a3b8; }
+.sod-m2-row-head { display: flex; align-items: baseline; justify-content: space-between; margin: 26px 0 12px; }
+.sod-m2-row-head h2 { margin: 0; font-size: 21px !important; font-weight: 800; color: #f8fafc; }
+.sod-m2-row-head a { font-size: 14px; font-weight: 600; color: #f3c74f !important; }
+.sod-m2-swipe {
+  display: flex; gap: 12px; overflow-x: auto; margin: 0 -16px; padding: 0 16px 8px;
+  scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.sod-m2-swipe::-webkit-scrollbar { display: none; }
+.sod-m2-dog {
+  flex: 0 0 150px; scroll-snap-align: start; display: flex; flex-direction: column;
+  border-radius: 18px; overflow: hidden; background: #101c26; border: 1px solid rgba(255, 255, 255, .07);
+  color: #f8fafc !important; text-decoration: none !important;
+}
+.sod-m2-dog img { width: 150px; height: 150px; object-fit: cover; display: block; }
+.sod-m2-dog-body { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px 12px; }
+.sod-m2-dog-body strong { font-size: 15px; font-weight: 700; }
+.sod-m2-dog-body small { font-size: 12px; color: #94a3b8; }
+.sod-m2-bar { display: block; height: 5px; border-radius: 3px; background: rgba(255, 255, 255, .12); overflow: hidden; }
+.sod-m2-bar i { display: block; height: 100%; background: #f3c74f; border-radius: 3px; }
+
+/* ---------- Patenschaft: Hundekarten zum Wischen ---------- */
+body.sod-m2 #patenschaft .sod-dogs-grid,
+body.sod-m2.page-patenschaft .sod-dogs-grid {
+  display: flex !important; gap: 12px !important; overflow-x: auto; scroll-snap-type: x mandatory;
+  margin: 0 -16px; padding: 4px 16px 12px; scrollbar-width: none; align-items: stretch;
+}
+body.sod-m2 #patenschaft .sod-dogs-grid::-webkit-scrollbar,
+body.sod-m2.page-patenschaft .sod-dogs-grid::-webkit-scrollbar { display: none; }
+body.sod-m2 #patenschaft .sod-dogs-grid > .dog-card,
+body.sod-m2.page-patenschaft .sod-dogs-grid > .dog-card { flex: 0 0 84%; scroll-snap-align: center; }
+body.sod-m2 #patenschaft .sod-dogs-grid > .dog-card[hidden],
+body.sod-m2.page-patenschaft .sod-dogs-grid > .dog-card[hidden] { display: none !important; }
+body.sod-m2 #patenschaft .dog-card .sod-dog-thumb-strip,
+body.sod-m2 #patenschaft .dog-card .dog-card-meta,
+body.sod-m2 #patenschaft .dog-card .dog-card-section,
+body.sod-m2 #patenschaft .dog-card .dog-card-desc,
+body.sod-m2.page-patenschaft .dog-card .sod-dog-thumb-strip,
+body.sod-m2.page-patenschaft .dog-card .dog-card-meta,
+body.sod-m2.page-patenschaft .dog-card .dog-card-section,
+body.sod-m2.page-patenschaft .dog-card .dog-card-desc { display: none !important; }
+body.sod-m2 #patenschaft .dog-card-body,
+body.sod-m2.page-patenschaft .dog-card-body { padding: 16px !important; }
+body.sod-m2 #patenschaft .sod-support-progress,
+body.sod-m2.page-patenschaft .sod-support-progress { margin-top: 12px !important; padding: 12px !important; }
+body.sod-m2 #patenschaft .dog-card-footer,
+body.sod-m2.page-patenschaft .dog-card-footer { padding: 0 16px 16px !important; }
+
+/* ---------- Vermittlung: kompakte Karten in zwei Spalten ---------- */
+body.sod-m2 #vermittlung .sod-dogs-grid,
+body.sod-m2.page-vermittlung:not(:has(.sod-combined)) .sod-dogs-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 12px !important;
+}
+body.sod-m2 #vermittlung .dog-card { border-radius: 18px !important; }
+body.sod-m2 #vermittlung .dog-card .sod-dog-thumb-strip,
+body.sod-m2 #vermittlung .dog-card .dog-card-meta,
+body.sod-m2 #vermittlung .dog-card .dog-card-section,
+body.sod-m2 #vermittlung .dog-card .dog-card-desc,
+body.sod-m2 #vermittlung .dog-card .sod-support-progress,
+body.sod-m2 #vermittlung .dog-card .dog-card-sub { display: none !important; }
+body.sod-m2 #vermittlung .dog-card-image,
+body.sod-m2 #vermittlung .dog-card-video { aspect-ratio: 4 / 5 !important; }
+body.sod-m2 #vermittlung .dog-card-image img,
+body.sod-m2 #vermittlung .dog-card-video-frame { max-height: none !important; }
+body.sod-m2 #vermittlung .dog-card-video-frame::-webkit-media-controls { display: none !important; }
+body.sod-m2 #vermittlung .dog-card-body { padding: 10px 12px 4px !important; }
+body.sod-m2 #vermittlung .dog-card-name { font-size: 17px !important; }
+body.sod-m2 #vermittlung .dog-card-footer { padding: 6px 10px 12px !important; flex-direction: column; gap: 6px; }
+body.sod-m2 #vermittlung .dog-card-footer .btn { min-height: 40px; padding: 8px 10px !important; font-size: 13px !important; }
+body.sod-m2 #vermittlung .badge { padding: 4px 9px !important; font-size: 11px !important; }
+
+/* Filter als wischbare Chips */
+body.sod-m2 .sod-dogs-tags { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 8px; scrollbar-width: none; }
+body.sod-m2 .sod-dogs-tags::-webkit-scrollbar { display: none; }
+body.sod-m2 .sod-dogs-tag { flex: 0 0 auto; }
+
+/* ---------- Spenden: Formular zuerst, grosse Kacheln ---------- */
+body.sod-m2 .donation-layout { display: flex !important; flex-direction: column; gap: 28px; }
+body.sod-m2 .donation-layout > .donation-side { order: -1; }
+body.sod-m2 .donation-widget { padding: 20px 16px !important; border-radius: 20px !important; }
+body.sod-m2 .donation-widget .amounts { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px !important; }
+body.sod-m2 .donation-widget .amount-btn { min-height: 64px !important; border-radius: 16px !important; font-size: 22px !important; font-weight: 800 !important; }
+body.sod-m2 .donation-widget .type-tab { min-height: 44px; }
+body.sod-m2 .donation-widget .payment-methods { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 8px !important; }
+body.sod-m2 .donation-widget .pay-method { min-height: 52px !important; border-radius: 14px !important; font-size: 15px !important; }
+body.sod-m2 .donation-widget #widget-cta { min-height: 56px; font-size: 17px !important; border-radius: 14px !important; }
+
+/* ---------- Schicksale: Uebersicht als Liste ---------- */
+body.sod-m2 .sodst-tabs { display: flex; overflow-x: auto; max-width: 100%; scrollbar-width: none; }
+body.sod-m2 .sodst-tabs::-webkit-scrollbar { display: none; }
+body.sod-m2 .sodst-tabs button { flex: 0 0 auto; min-height: 40px; }
+body.sod-m2 .sodst-overview .sodst-grid { grid-template-columns: 1fr; gap: 12px; }
+body.sod-m2 .sodst-overview .sodst-grid > .sodst-card:first-child .sodst-card-media { aspect-ratio: 4 / 5; }
+body.sod-m2 .sodst-overview .sodst-grid > .sodst-card:not(:first-child) {
+  display: grid; grid-template-columns: 110px minmax(0, 1fr); border-radius: 18px;
+}
+body.sod-m2 .sodst-overview .sodst-grid > .sodst-card:not(:first-child) .sodst-card-media { aspect-ratio: auto; height: 100%; min-height: 150px; }
+body.sod-m2 .sodst-overview .sodst-grid > .sodst-card:not(:first-child) .sodst-card-body { padding: 12px; gap: 6px; }
+body.sod-m2 .sodst-overview .sodst-grid > .sodst-card:not(:first-child) .sodst-card-body h3 { font-size: 1.08rem; }
+body.sod-m2 .sodst-overview .sodst-grid > .sodst-card:not(:first-child) .sodst-card-body p { font-size: .85rem; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+body.sod-m2 .sodst-overview .sodst-grid > .sodst-card:not(:first-child) .sodst-actions .btn { min-height: 40px; padding: 8px 14px !important; font-size: 13px !important; }
+
+/* Einzelne Geschichte: grosses Titelbild, Videos gut sichtbar */
+body.sod-m2 .sodst-hero { min-height: 60vh; }
+body.sod-m2 .sodst-hero-body { padding: 20px 18px; }
+body.sod-m2 .sodst-short { flex-basis: 150px; }
+body.sod-m2 .sodst-short-play { width: 50px; height: 50px; font-size: 1rem; }
+body.sod-m2 .sodst-chapter { scroll-margin-top: 80px; }
+}

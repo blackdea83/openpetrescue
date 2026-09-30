@@ -8,6 +8,9 @@ if (!defined('ABSPATH')) {
 get_header();
 ?>
 <main>
+    <?php if (function_exists('sod_hero_new_visible') && sod_hero_new_visible()) : ?>
+        <?php get_template_part('template-parts/hero-neu'); ?>
+    <?php else : ?>
     <section class="ob-hero" id="ueber-uns">
         <img fetchpriority="high" decoding="async" alt="" height="925" src="<?php echo esc_url(sod_home_image_url('hero', sod_asset('images/hero-large.jpg'))); ?>" width="1600">
         <div class="container">
@@ -39,6 +42,11 @@ get_header();
             <?php sod_te('home.scroll'); ?>
         </div>
     </section>
+    <?php endif; ?>
+
+    <?php if (function_exists('sod_m2_home_block')) { sod_m2_home_block(); } ?>
+
+    <?php get_template_part('template-parts/story-teaser'); ?>
 
     <section class="video-highlight" id="highlight-video">
         <div class="video-highlight-inner scroll-reveal">

@@ -22,8 +22,17 @@ function sod_translations(): array
         sod_translations_datenschutz(),
         sod_translations_dogcard(),
         sod_translations_tierheim_bau(),
-        sod_translations_support()
+        sod_translations_support(),
+        sod_translations_mobile(),
+        sod_translations_heronew(),
+        sod_translations_rescue(),
+        sod_translations_stories(),
+        sod_translations_share()
     );
+    // Ergaenzungen in bestehende Gruppen einmischen, statt sie zu ersetzen.
+    foreach (sod_translations_modules_extra() as $group => $strings) {
+        $all[$group] = array_merge($all[$group] ?? [], $strings);
+    }
     return $all;
 }
 
@@ -824,6 +833,234 @@ function sod_translations_tierheim_bau(): array
             ],
             'popup_title' => ['de' => 'Aktueller Baufortschritt', 'en' => 'Current construction progress', 'bs' => 'Trenutni napredak izgradnje'],
             'empty' => ['de' => 'Noch keine Fotos hinterlegt.', 'en' => 'No photos added yet.', 'bs' => 'Još nema dodanih fotografija.'],
+        ],
+    ];
+}
+
+/**
+ * Neue Handy-Ansicht (30.09.2026): Leiste unten und Schnellstart.
+ */
+function sod_translations_mobile(): array
+{
+    return [
+        'mobile' => [
+            'nav_label' => ['de' => 'Hauptnavigation', 'en' => 'Main navigation', 'bs' => 'Glavna navigacija'],
+            'help_label' => ['de' => 'Jetzt helfen', 'en' => 'Help now', 'bs' => 'Pomozi sada'],
+            'tab_home' => ['de' => 'Start', 'en' => 'Home', 'bs' => 'Početna'],
+            'tab_stories' => ['de' => 'Schicksale', 'en' => 'Stories', 'bs' => 'Sudbine'],
+            'tab_adopt' => ['de' => 'Adoptieren', 'en' => 'Adopt', 'bs' => 'Udomi'],
+            'tab_sponsor' => ['de' => 'Pate werden', 'en' => 'Sponsor', 'bs' => 'Pokrovitelj'],
+            'tab_donate' => ['de' => 'Spenden', 'en' => 'Donate', 'bs' => 'Doniraj'],
+            'sponsor' => ['de' => 'Pate werden', 'en' => 'Become a sponsor', 'bs' => 'Postani pokrovitelj'],
+            'sponsor_sub' => ['de' => 'ab 5 € im Monat', 'en' => 'from €5 a month', 'bs' => 'od 5 € mjesečno'],
+            'donate' => ['de' => 'Spenden', 'en' => 'Donate', 'bs' => 'Doniraj'],
+            'donate_once' => ['de' => 'Einmal spenden', 'en' => 'Donate once', 'bs' => 'Doniraj jednom'],
+            'donate_sub' => ['de' => 'jeder Betrag hilft', 'en' => 'every amount helps', 'bs' => 'svaki iznos pomaže'],
+            'need_sponsors' => ['de' => 'Sie suchen Paten', 'en' => 'They need sponsors', 'bs' => 'Traže pokrovitelje'],
+            'see_all' => ['de' => 'Alle ansehen', 'en' => 'See all', 'bs' => 'Pogledaj sve'],
+            'open_amount' => ['de' => 'noch %d € offen', 'en' => '€%d still needed', 'bs' => 'još %d € nedostaje'],
+            'funded' => ['de' => 'versorgt', 'en' => 'covered', 'bs' => 'zbrinut'],
+        ],
+    ];
+}
+
+/**
+ * Hero-Bereich der Startseite mit wechselnden Tieren.
+ */
+function sod_translations_heronew(): array
+{
+    return [
+        'heronew' => [
+            'preview_badge' => ['de' => 'Vorschau – nur für Admins sichtbar', 'en' => 'Preview – visible to admins only', 'bs' => 'Pregled – vidljivo samo administratorima'],
+            'eyebrow' => ['de' => '{org}', 'en' => '{org}', 'bs' => '{org}'],
+            'line1' => ['de' => 'Gerettet.', 'en' => 'Rescued.', 'bs' => 'Spašeni.'],
+            'line2' => ['de' => 'Aber noch nicht zuhause.', 'en' => 'But not home yet.', 'bs' => 'Ali još nisu kod kuće.'],
+            'line3' => ['de' => 'Bleib an ihrer Seite.', 'en' => 'Stay by their side.', 'bs' => 'Ostani uz njih.'],
+            'lead' => [
+                'de' => 'Futter, Tierarzt, ein warmer Platz – jeden Monat aufs Neue. Mit deiner Patenschaft begleitest du einen Hund, bis er ein Zuhause findet.',
+                'en' => 'Food, vet care, a warm place – every single month. With your sponsorship you stand by a dog until it finds a home.',
+                'bs' => 'Hrana, veterinar, toplo mjesto – iz mjeseca u mjesec. Svojim pokroviteljstvom pratiš jednog psa dok ne pronađe dom.',
+            ],
+            'cta_sponsor' => ['de' => 'Pate werden ab 5 €', 'en' => 'Sponsor from €5', 'bs' => 'Postani pokrovitelj od 5 €'],
+            'cta_donate' => ['de' => 'Einmalig spenden', 'en' => 'One-time donation', 'bs' => 'Jednokratna donacija'],
+            'trust' => ['de' => 'Monatlich helfen · jederzeit kündbar · einem Hund verbunden', 'en' => 'Help monthly · cancel anytime · connected to one dog', 'bs' => 'Pomaži mjesečno · otkaži bilo kada · povezan s jednim psom'],
+            'card_title' => ['de' => 'Das ist %s.', 'en' => 'This is %s.', 'bs' => 'Ovo je %s.'],
+            'card_meta' => ['de' => '%1$s von %2$s € im Monat gesichert', 'en' => '€%1$s of €%2$s a month secured', 'bs' => '%1$s od %2$s € mjesečno osigurano'],
+            'card_link' => ['de' => 'Kennenlernen', 'en' => 'Meet', 'bs' => 'Upoznaj'],
+        ],
+    ];
+}
+
+/**
+ * Texte fuer den Hilfe-Button unten rechts (FAQ zum Bezahlen einer Patenschaft
+ * plus Formular fuer technische Probleme). Wird vom Plugin ueber self::t()
+ * gelesen - fehlt ein Schluessel hier, zeigt die Seite den rohen Schluesselnamen.
+ */
+function sod_translations_rescue(): array
+{
+    return [
+        'rescue' => [
+            'preview' => ['de' => 'Vorschau – nur Admins', 'en' => 'Preview – admins only', 'bs' => 'Pregled – samo admini'],
+            'kicker' => ['de' => 'Unsere Mission – Stand heute', 'en' => 'Our mission – as of today', 'bs' => 'Naša misija – stanje danas'],
+            'alltime_unit' => ['de' => 'Hunde', 'en' => 'dogs', 'bs' => 'pasa'],
+            'alltime_text' => ['de' => 'haben wir schon gerettet.', 'en' => 'rescued so far.', 'bs' => 'smo već spasili.'],
+            'current_tpl' => ['de' => 'Gerade beschützen wir %1$s Hunde – %2$s davon warten noch auf Paten.', 'en' => 'Right now we protect %1$s dogs – %2$s of them are still waiting for sponsors.', 'bs' => 'Trenutno štitimo %1$s pasa – %2$s od njih još čeka pokrovitelje.'],
+            'current_all_tpl' => ['de' => 'Gerade beschützen wir %1$s Hunde – und alle sind versorgt. Danke!', 'en' => 'Right now we protect %1$s dogs – and all of them are cared for. Thank you!', 'bs' => 'Trenutno štitimo %1$s pasa – i svi su zbrinuti. Hvala!'],
+            'paws_label' => ['de' => '%1$d Hunde versorgt, %2$d warten noch auf Paten', 'en' => '%1$d dogs cared for, %2$d still waiting for sponsors', 'bs' => '%1$d pasa zbrinuto, %2$d još čeka pokrovitelje'],
+            'legend_safe' => ['de' => 'versorgt – volle Patenschaft', 'en' => 'cared for – full sponsorship', 'bs' => 'zbrinut – puno pokroviteljstvo'],
+            'legend_waiting' => ['de' => 'wartet noch auf Paten', 'en' => 'still waiting for sponsors', 'bs' => 'još čeka pokrovitelje'],
+            'cta_tpl' => ['de' => 'Einem der %d helfen →', 'en' => 'Help one of the %d →', 'bs' => 'Pomozi jednom od %d →'],
+            'aria_tpl' => ['de' => '%1$d Hunde gerettet, %2$d werden gerade beschützt, %3$d warten noch auf Paten', 'en' => '%1$d dogs rescued, %2$d currently protected, %3$d still waiting for sponsors', 'bs' => '%1$d pasa spašeno, %2$d trenutno zaštićeno, %3$d još čeka pokrovitelje'],
+            'note' => ['de' => 'Jede Pfote ist ein Hund, den wir gerade beschützen. Zählt automatisch mit.', 'en' => 'Each paw is a dog we are protecting right now. Updated automatically.', 'bs' => 'Svaka šapa je pas kojeg trenutno štitimo. Automatski se ažurira.'],
+        ],
+    ];
+}
+
+function sod_translations_stories(): array
+{
+    return [
+        'stories' => [
+            'eyebrow' => ['de' => 'Schicksale', 'en' => 'Their stories', 'bs' => 'Sudbine'],
+            'title' => ['de' => 'Jeder Hund hat eine Geschichte.', 'en' => 'Every dog has a story.', 'bs' => 'Svaki pas ima svoju priču.'],
+            'lead' => ['de' => 'Wir zeigen euch in Videos, wie wir sie gefunden haben, was sie erlebt haben – und wie es weitergeht. Manche Geschichten haben ihr Happy End schon. Andere schreibst du mit.', 'en' => 'In videos we show how we found them, what they went through – and what happens next. Some stories already have their happy ending. Others you help to write.', 'bs' => 'U videima vam pokazujemo kako smo ih pronašli, šta su proživjeli – i šta slijedi. Neke priče već imaju sretan kraj. Druge pišeš ti s nama.'],
+            'tab_need' => ['de' => 'Braucht dich jetzt', 'en' => 'Needs you now', 'bs' => 'Treba te sada'],
+            'tab_happy' => ['de' => 'Happy Ends', 'en' => 'Happy endings', 'bs' => 'Sretni krajevi'],
+            'empty_need' => ['de' => 'Gerade sind alle Geschichten glücklich ausgegangen.', 'en' => 'Right now all stories have a happy ending.', 'bs' => 'Trenutno su sve priče sretno završile.'],
+            'empty_happy' => ['de' => 'Noch kein Happy End – sobald ein Hund vermittelt ist, erscheint seine Geschichte hier.', 'en' => 'No happy ending yet – as soon as a dog is adopted, its story appears here.', 'bs' => 'Još nema sretnog kraja – čim pas bude udomljen, njegova priča će se pojaviti ovdje.'],
+            'badge_sponsor' => ['de' => 'Braucht Paten', 'en' => 'Needs sponsors', 'bs' => 'Treba pokrovitelje'],
+            'badge_home' => ['de' => 'Sucht ein Zuhause', 'en' => 'Looking for a home', 'bs' => 'Traži dom'],
+            'badge_happy' => ['de' => 'Happy End', 'en' => 'Happy ending', 'bs' => 'Sretan kraj'],
+            'video_count' => ['de' => '%d Videos', 'en' => '%d videos', 'bs' => '%d videa'],
+            'extra_tierheim' => ['de' => 'Tierheim', 'en' => 'Shelter', 'bs' => 'Sklonište'],
+            'extra_improvements' => ['de' => 'Technische Verbesserungen', 'en' => 'Technical improvements', 'bs' => 'Tehnička poboljšanja'],
+            'more_title' => ['de' => 'Weitere Schicksale', 'en' => 'More stories', 'bs' => 'Još sudbina'],
+            'schicksal_link' => ['de' => 'Schicksal ansehen', 'en' => 'Read the story', 'bs' => 'Pogledaj sudbinu'],
+            'video_count_one' => ['de' => '%d Video', 'en' => '%d video', 'bs' => '%d video'],
+            'chapter_count' => ['de' => '%d Kapitel', 'en' => '%d chapters', 'bs' => '%d poglavlja'],
+            'read' => ['de' => 'Geschichte ansehen', 'en' => 'Read the story', 'bs' => 'Pogledaj priču'],
+            'sponsor_short' => ['de' => 'Pate werden', 'en' => 'Sponsor', 'bs' => 'Postani pokrovitelj'],
+            'sponsor' => ['de' => 'Pate von %s werden', 'en' => 'Sponsor %s', 'bs' => 'Postani pokrovitelj za %s'],
+            'adopt' => ['de' => '%s kennenlernen', 'en' => 'Meet %s', 'bs' => 'Upoznaj: %s'],
+            'monthly' => ['de' => 'Monatsversorgung', 'en' => 'Monthly care', 'bs' => 'Mjesečna njega'],
+            'covered' => ['de' => 'Voll versorgt – danke an alle Paten!', 'en' => 'Fully covered – thank you to all sponsors!', 'bs' => 'Potpuno pokriveno – hvala svim pokroviteljima!'],
+            'remaining' => ['de' => 'Noch %s € im Monat offen', 'en' => '€%s per month still needed', 'bs' => 'Još %s € mjesečno nedostaje'],
+            'back' => ['de' => 'Alle Geschichten', 'en' => 'All stories', 'bs' => 'Sve priče'],
+            'told_by' => ['de' => 'Schicksale · erzählt von {org}', 'en' => 'Their stories · told by {org}', 'bs' => 'Sudbine · priča {org}'],
+            'since' => ['de' => 'seit %s', 'en' => 'since %s', 'bs' => 'od %s'],
+            'tldr' => ['de' => 'Das Wichtigste in 20 Sekunden', 'en' => 'The story in 20 seconds', 'bs' => 'Najvažnije za 20 sekundi'],
+            'chapter_from' => ['de' => 'Kapitel %1$d · ab %2$s', 'en' => 'Chapter %1$d · from %2$s', 'bs' => 'Poglavlje %1$d · od %2$s'],
+            'chapter_n' => ['de' => 'Kapitel %d', 'en' => 'Chapter %d', 'bs' => 'Poglavlje %d'],
+            'chapter_now' => ['de' => 'Kapitel %d · Jetzt', 'en' => 'Chapter %d · Now', 'bs' => 'Poglavlje %d · Sada'],
+            'quote_by' => ['de' => 'Das Team von {org}', 'en' => 'The {org} team', 'bs' => 'Tim {org}'],
+            'quote_by_short' => ['de' => '— {org}', 'en' => '— {org}', 'bs' => '— {org}'],
+            'mid_sponsor' => ['de' => '%s braucht Menschen wie dich. Schon 5 € im Monat helfen.', 'en' => '%s needs people like you. Even €5 a month helps.', 'bs' => '%s treba ljude poput tebe. Već 5 € mjesečno pomaže.'],
+            'mid_others' => ['de' => 'Diese Rettung war nur möglich, weil Menschen wie du geholfen haben. Andere Hunde warten noch auf diese Chance.', 'en' => 'This rescue was only possible because people like you helped. Other dogs are still waiting for this chance.', 'bs' => 'Ovo spašavanje bilo je moguće samo zato što su ljudi poput tebe pomogli. Drugi psi još čekaju tu priliku.'],
+            'others_btn' => ['de' => 'Hunde, die noch Hilfe brauchen', 'en' => 'Dogs who still need help', 'bs' => 'Psi kojima još treba pomoć'],
+            'now_sponsor_title' => ['de' => '%s wartet – auf dich', 'en' => '%s is waiting – for you', 'bs' => '%s čeka – tebe'],
+            'now_sponsor_text' => ['de' => 'Dieses Kapitel ist noch nicht fertig geschrieben. Mit einer Patenschaft sicherst du Futter, Tierarzt und Unterbringung für %s – und schreibst die Geschichte mit.', 'en' => 'This chapter has not been written yet. With a sponsorship you secure food, vet care and shelter for %s – and help write the story.', 'bs' => 'Ovo poglavlje još nije napisano. Pokroviteljstvom osiguravaš hranu, veterinara i smještaj za %s – i pišeš priču sa nama.'],
+            'now_home_title' => ['de' => 'Das letzte Kapitel fehlt noch: ein Zuhause', 'en' => 'The last chapter is still missing: a home', 'bs' => 'Posljednje poglavlje još nedostaje: dom'],
+            'now_home_text' => ['de' => 'Die Versorgung von %s ist dank der Paten gesichert. Was jetzt noch fehlt, sind Menschen, die für immer bleiben.', 'en' => 'Thanks to sponsors, care for %s is covered. What is still missing are people who stay forever.', 'bs' => 'Zahvaljujući pokroviteljima njega za %s je osigurana. Još nedostaju ljudi koji će ostati zauvijek.'],
+            'now_happy_title' => ['de' => '%s ist angekommen', 'en' => '%s has arrived home', 'bs' => '%s je stigao/la kući'],
+            'now_happy_text' => ['de' => '%s hat ein Zuhause gefunden. Danke an alle, die diesen Weg möglich gemacht haben.', 'en' => '%s has found a home. Thank you to everyone who made this journey possible.', 'bs' => '%s je pronašao/la dom. Hvala svima koji su omogućili ovaj put.'],
+            'side_sponsor_text' => ['de' => 'Monatlich, jederzeit kündbar. Endet automatisch, wenn der Hund ein Zuhause findet.', 'en' => 'Monthly, cancel any time. Ends automatically when the dog finds a home.', 'bs' => 'Mjesečno, otkaz u bilo kojem trenutku. Automatski prestaje kada pas nađe dom.'],
+            'side_sponsor_btn' => ['de' => 'Weiter zur Patenschaft', 'en' => 'Continue to sponsorship', 'bs' => 'Dalje na pokroviteljstvo'],
+            'side_covered_title' => ['de' => '%s ist versorgt 💛', 'en' => '%s is covered 💛', 'bs' => '%s je zbrinut/a 💛'],
+            'side_others_title_happy' => ['de' => 'Diese Hunde brauchen dich noch', 'en' => 'These dogs still need you', 'bs' => 'Ovim psima si još potreban/na'],
+            'side_others_text' => ['de' => 'Diese Hunde brauchen noch Paten:', 'en' => 'These dogs still need sponsors:', 'bs' => 'Ovim psima još trebaju pokrovitelji:'],
+            'playlist_title' => ['de' => 'Videos von %s', 'en' => 'Videos of %s', 'bs' => 'Videa: %s'],
+            'playlist_text' => ['de' => '%d Videos auf YouTube. Neue Videos erscheinen automatisch in der Geschichte.', 'en' => '%d videos on YouTube. New videos appear in the story automatically.', 'bs' => '%d videa na YouTubeu. Nova videa se automatski pojavljuju u priči.'],
+            'playlist_btn' => ['de' => 'Auf YouTube ansehen', 'en' => 'Watch on YouTube', 'bs' => 'Gledaj na YouTubeu'],
+            'share_title' => ['de' => 'Geschichte von %s teilen', 'en' => 'Share %s’s story', 'bs' => 'Podijeli priču: %s'],
+            'share_text' => ['de' => 'Jede geteilte Geschichte kann einen neuen Paten oder ein Zuhause finden.', 'en' => 'Every shared story can find a new sponsor or a home.', 'bs' => 'Svaka podijeljena priča može pronaći novog pokrovitelja ili dom.'],
+            'copy' => ['de' => 'Link kopieren', 'en' => 'Copy link', 'bs' => 'Kopiraj link'],
+            'copied' => ['de' => 'Kopiert ✓', 'en' => 'Copied ✓', 'bs' => 'Kopirano ✓'],
+            'play_aria' => ['de' => 'Video abspielen: %s', 'en' => 'Play video: %s', 'bs' => 'Pusti video: %s'],
+            'consent_text' => ['de' => 'Dieses Video kommt von YouTube. Mit deinem Klick erlaubst du externe Videos auf dieser Website; YouTube erhält dabei u. a. deine IP-Adresse. Mehr in der Datenschutzerklärung.', 'en' => 'This video comes from YouTube. By clicking, you allow external videos on this website; YouTube receives your IP address, among other data. More in the privacy policy.', 'bs' => 'Ovaj video dolazi sa YouTubea. Klikom dozvoljavaš eksterne videozapise na ovoj stranici; YouTube pritom prima i tvoju IP adresu. Više u pravilima privatnosti.'],
+            'consent_btn' => ['de' => 'Externe Videos erlauben', 'en' => 'Allow external videos', 'bs' => 'Dozvoli eksterne videozapise'],
+            'close' => ['de' => 'Schließen', 'en' => 'Close', 'bs' => 'Zatvori'],
+            'chip_now' => ['de' => 'Jetzt', 'en' => 'Now', 'bs' => 'Sada'],
+            'chip_happy' => ['de' => 'Angekommen', 'en' => 'Home', 'bs' => 'Stigao/la kući'],
+            'teaser_btn' => ['de' => 'Geschichte von %s ansehen', 'en' => 'Watch %s’s story', 'bs' => 'Pogledaj priču: %s'],
+            'teaser_all' => ['de' => 'Alle Schicksale', 'en' => 'All stories', 'bs' => 'Sve sudbine'],
+            'cta_sponsor' => ['de' => 'Pate für %s werden', 'en' => 'Sponsor %s', 'bs' => 'Postani pokrovitelj za %s'],
+            'cta_donate' => ['de' => 'Für die Hunde spenden', 'en' => 'Donate for the dogs', 'bs' => 'Doniraj za pse'],
+        ],
+    ];
+}
+
+function sod_translations_share(): array
+{
+    return [
+        'share' => [
+            'share' => ['de' => 'Teilen', 'en' => 'Share', 'bs' => 'Podijeli'],
+            'share_dog' => ['de' => '%s teilen', 'en' => 'Share %s', 'bs' => 'Podijeli: %s'],
+            'site_button' => ['de' => 'Seite teilen', 'en' => 'Share page', 'bs' => 'Podijeli stranicu'],
+            'close' => ['de' => 'Schließen', 'en' => 'Close', 'bs' => 'Zatvori'],
+            'copy' => ['de' => 'Link kopieren', 'en' => 'Copy link', 'bs' => 'Kopiraj link'],
+            'copied' => ['de' => 'Kopiert ✓', 'en' => 'Copied ✓', 'bs' => 'Kopirano ✓'],
+            'preview_badge' => ['de' => 'Vorschau – nur Team', 'en' => 'Preview – team only', 'bs' => 'Pregled – samo tim'],
+            'box_text' => ['de' => 'Vielleicht sucht jemand in deinem Umfeld genau so einen Hund – oder möchte Pate werden. Jedes Teilen hilft.', 'en' => 'Maybe someone you know is looking for exactly this dog – or would like to become a sponsor. Every share helps.', 'bs' => 'Možda neko iz tvoje okoline traži baš ovakvog psa – ili želi postati pokrovitelj. Svako dijeljenje pomaže.'],
+            'site_title' => ['de' => '{org} – Hilfe für Tiere in Not', 'en' => '{org} – help for animals in need', 'bs' => '{org} – pomoć životinjama u nevolji'],
+            'site_text' => ['de' => 'Diese Tiere haben niemanden, der sie sucht, wenn sie nicht heimkommen. {org} gibt ihnen Futter, Tierarzt und ein sicheres Zuhause – jede Hilfe zählt 🧡', 'en' => 'These animals have no one looking for them when they do not come home. {org} gives them food, vet care and a safe home – every bit of help counts 🧡', 'bs' => 'Ove životinje nemaju nikoga ko ih traži kad se ne vrate kući. {org} im daje hranu, veterinara i siguran dom – svaka pomoć je važna 🧡'],
+            // Hundetexte gibt es in maennlicher (_m), weiblicher (_f) und neutraler (_n) Form.
+            // Welche verwendet wird, entscheidet das Feld "Geschlecht" im Hundeprofil.
+            'card_text_m' => ['de' => 'Das ist %s. Er hat gelernt, dass niemand für ihn da ist – wir möchten, dass sich das ändert 🐾', 'en' => 'This is %s. He learned that no one is there for him – we want to change that 🐾', 'bs' => 'Ovo je %s. Naučio je da niko nije tu za njega – želimo to promijeniti 🐾'],
+            'card_text_f' => ['de' => 'Das ist %s. Sie hat gelernt, dass niemand für sie da ist – wir möchten, dass sich das ändert 🐾', 'en' => 'This is %s. She learned that no one is there for her – we want to change that 🐾', 'bs' => 'Ovo je %s. Naučila je da niko nije tu za nju – želimo to promijeniti 🐾'],
+            'card_text_n' => ['de' => 'Das ist %s. Bisher war niemand da – wir möchten, dass sich das ändert 🐾', 'en' => 'This is %s. So far no one was there – we want to change that 🐾', 'bs' => 'Ovo je %s. Do sada nije bilo nikoga – želimo to promijeniti 🐾'],
+            'dog_title_home' => ['de' => '%s sucht ein Zuhause', 'en' => '%s is looking for a home', 'bs' => '%s traži dom'],
+            'dog_text_home_m' => ['de' => '%s kennt die Straße, aber noch kein Zuhause. Er wartet darauf, dass jemand bleibt 🐾 Vielleicht kennst du wen?', 'en' => '%s knows the street, but not a home yet. He is waiting for someone to stay 🐾 Maybe you know someone?', 'bs' => '%s poznaje ulicu, ali još nema dom. Čeka nekoga ko će ostati 🐾 Možda poznaješ nekoga?'],
+            'dog_text_home_f' => ['de' => '%s kennt die Straße, aber noch kein Zuhause. Sie wartet darauf, dass jemand bleibt 🐾 Vielleicht kennst du wen?', 'en' => '%s knows the street, but not a home yet. She is waiting for someone to stay 🐾 Maybe you know someone?', 'bs' => '%s poznaje ulicu, ali još nema dom. Čeka nekoga ko će ostati 🐾 Možda poznaješ nekoga?'],
+            'dog_text_home_n' => ['de' => '%s kennt die Straße, aber noch kein Zuhause – und wartet darauf, dass jemand bleibt 🐾 Vielleicht kennst du wen?', 'en' => '%s knows the street, but not a home yet – still waiting for someone to stay 🐾 Maybe you know someone?', 'bs' => '%s poznaje ulicu, ali još nema dom – i čeka nekoga ko će ostati 🐾 Možda poznaješ nekoga?'],
+            'dog_title_sponsor' => ['de' => '%s braucht noch Paten', 'en' => '%s still needs sponsors', 'bs' => '%s još treba pokrovitelje'],
+            'dog_text_sponsor_m' => ['de' => 'Für %s ist noch niemand da. 5 € im Monat sind sein Futter, sein Tierarzt und sein Platz zum Schlafen 🧡', 'en' => 'There is still no one for %s. €5 a month means his food, his vet and his place to sleep 🧡', 'bs' => 'Za psa %s još nema nikoga. 5 € mjesečno je njegova hrana, njegov veterinar i njegovo mjesto za spavanje 🧡'],
+            'dog_text_sponsor_f' => ['de' => 'Für %s ist noch niemand da. 5 € im Monat sind ihr Futter, ihr Tierarzt und ihr Platz zum Schlafen 🧡', 'en' => 'There is still no one for %s. €5 a month means her food, her vet and her place to sleep 🧡', 'bs' => 'Za %s još nema nikoga. 5 € mjesečno je njena hrana, njen veterinar i njeno mjesto za spavanje 🧡'],
+            'dog_text_sponsor_n' => ['de' => 'Für %s ist noch niemand da. 5 € im Monat bedeuten Futter, Tierarzt und einen Platz zum Schlafen 🧡', 'en' => 'There is still no one for %s. €5 a month means food, vet care and a place to sleep 🧡', 'bs' => 'Za %s još nema nikoga. 5 € mjesečno znači hrana, veterinar i mjesto za spavanje 🧡'],
+            'dog_title_care' => ['de' => '%s wird gerade versorgt', 'en' => '%s is being cared for', 'bs' => 'Brinemo o psu %s'],
+            'dog_text_care_m' => ['de' => '%s wird gerade bei uns versorgt und ist noch nicht auf Zuhause-Suche. Jede Hilfe kommt direkt bei ihm an 🧡', 'en' => '%s is being cared for by us and is not looking for a home yet. Every bit of help reaches him directly 🧡', 'bs' => 'Trenutno brinemo o psu %s i još ne traži dom. Svaka pomoć stiže direktno do njega 🧡'],
+            'dog_text_care_f' => ['de' => '%s wird gerade bei uns versorgt und ist noch nicht auf Zuhause-Suche. Jede Hilfe kommt direkt bei ihr an 🧡', 'en' => '%s is being cared for by us and is not looking for a home yet. Every bit of help reaches her directly 🧡', 'bs' => 'Trenutno brinemo o %s i još ne traži dom. Svaka pomoć stiže direktno do nje 🧡'],
+            'dog_text_care_n' => ['de' => '%s wird gerade bei uns versorgt und ist noch nicht auf Zuhause-Suche. Jede Hilfe kommt direkt an 🧡', 'en' => '%s is being cared for by us and is not looking for a home yet. Every bit of help arrives directly 🧡', 'bs' => 'Trenutno brinemo o %s i još ne traži dom. Svaka pomoć stiže direktno 🧡'],
+            'dog_cta_care_m' => ['de' => 'Jetzt zählt vor allem, dass er wieder gesund wird 🧡', 'en' => 'What matters now is that he gets well again 🧡', 'bs' => 'Sada je najvažnije da ponovo ozdravi 🧡'],
+            'dog_cta_care_f' => ['de' => 'Jetzt zählt vor allem, dass sie wieder gesund wird 🧡', 'en' => 'What matters now is that she gets well again 🧡', 'bs' => 'Sada je najvažnije da ponovo ozdravi 🧡'],
+            'dog_cta_care_n' => ['de' => 'Jetzt zählt vor allem die Genesung 🧡', 'en' => 'What matters now is getting well again 🧡', 'bs' => 'Sada je najvažniji oporavak 🧡'],
+            'dog_title_happy_m' => ['de' => '%s hat ein Zuhause gefunden', 'en' => '%s has found a home', 'bs' => '%s je pronašao dom'],
+            'dog_title_happy_f' => ['de' => '%s hat ein Zuhause gefunden', 'en' => '%s has found a home', 'bs' => '%s je pronašla dom'],
+            'dog_title_happy_n' => ['de' => '%s hat ein Zuhause gefunden', 'en' => '%s has found a home', 'bs' => '%s ima dom'],
+            'dog_text_happy_m' => ['de' => '%s hat es geschafft: von der Straße in ein eigenes Zuhause 🧡 So viele andere warten noch auf diesen Moment:', 'en' => '%s made it: from the street to a home of his own 🧡 So many others are still waiting for that moment:', 'bs' => '%s je uspio: sa ulice u vlastiti dom 🧡 Mnogi drugi još čekaju taj trenutak:'],
+            'dog_text_happy_f' => ['de' => '%s hat es geschafft: von der Straße in ein eigenes Zuhause 🧡 So viele andere warten noch auf diesen Moment:', 'en' => '%s made it: from the street to a home of her own 🧡 So many others are still waiting for that moment:', 'bs' => '%s je uspjela: sa ulice u vlastiti dom 🧡 Mnogi drugi još čekaju taj trenutak:'],
+            'dog_text_happy_n' => ['de' => '%s hat es geschafft: von der Straße in ein eigenes Zuhause 🧡 So viele andere warten noch auf diesen Moment:', 'en' => '%s made it: from the street to a home 🧡 So many others are still waiting for that moment:', 'bs' => '%s je uspio/la: sa ulice u vlastiti dom 🧡 Mnogi drugi još čekaju taj trenutak:'],
+            // Kurzer Zusatz, wenn der Text mit einem Ausschnitt aus der Geschichte beginnt.
+            'dog_cta_home_m' => ['de' => 'Jetzt wartet er noch auf ein Zuhause 🐾', 'en' => 'Now he is still waiting for a home 🐾', 'bs' => 'Sada još čeka svoj dom 🐾'],
+            'dog_cta_home_f' => ['de' => 'Jetzt wartet sie noch auf ein Zuhause 🐾', 'en' => 'Now she is still waiting for a home 🐾', 'bs' => 'Sada još čeka svoj dom 🐾'],
+            'dog_cta_home_n' => ['de' => 'Jetzt fehlt nur noch ein Zuhause 🐾', 'en' => 'Now only a home is missing 🐾', 'bs' => 'Sada nedostaje samo dom 🐾'],
+            'dog_cta_sponsor_m' => ['de' => 'Jetzt fehlt ihm noch ein Pate – schon 5 € im Monat helfen 🧡', 'en' => 'Now he still needs a sponsor – even €5 a month helps 🧡', 'bs' => 'Sada mu još treba pokrovitelj – već 5 € mjesečno pomaže 🧡'],
+            'dog_cta_sponsor_f' => ['de' => 'Jetzt fehlt ihr noch ein Pate – schon 5 € im Monat helfen 🧡', 'en' => 'Now she still needs a sponsor – even €5 a month helps 🧡', 'bs' => 'Sada joj još treba pokrovitelj – već 5 € mjesečno pomaže 🧡'],
+            'dog_cta_sponsor_n' => ['de' => 'Jetzt fehlt noch ein Pate – schon 5 € im Monat helfen 🧡', 'en' => 'Now a sponsor is still missing – even €5 a month helps 🧡', 'bs' => 'Sada još nedostaje pokrovitelj – već 5 € mjesečno pomaže 🧡'],
+            'dog_cta_happy_m' => ['de' => 'Heute hat er ein Zuhause 🧡 So viele andere warten noch:', 'en' => 'Today he has a home 🧡 So many others are still waiting:', 'bs' => 'Danas ima svoj dom 🧡 Mnogi drugi još čekaju:'],
+            'dog_cta_happy_f' => ['de' => 'Heute hat sie ein Zuhause 🧡 So viele andere warten noch:', 'en' => 'Today she has a home 🧡 So many others are still waiting:', 'bs' => 'Danas ima svoj dom 🧡 Mnogi drugi još čekaju:'],
+            'dog_cta_happy_n' => ['de' => 'Heute ist das geschafft 🧡 So viele andere warten noch:', 'en' => 'Today that is done 🧡 So many others are still waiting:', 'bs' => 'Danas je to uspjelo 🧡 Mnogi drugi još čekaju:'],
+            'ig_hint' => ['de' => 'Text und Link sind kopiert. Öffne Instagram und füge sie in deine Story oder Nachricht ein.', 'en' => 'Text and link copied. Open Instagram and paste them into your story or message.', 'bs' => 'Tekst i link su kopirani. Otvori Instagram i zalijepi ih u priču ili poruku.'],
+            'tt_hint' => ['de' => 'Text und Link sind kopiert. Öffne TikTok und füge sie in deine Nachricht oder Beschreibung ein.', 'en' => 'Text and link copied. Open TikTok and paste them into your message or caption.', 'bs' => 'Tekst i link su kopirani. Otvori TikTok i zalijepi ih u poruku ili opis.'],
+        ],
+    ];
+}
+
+/**
+ * Ergaenzungen fuer Hero (Spendenkreis) und Hundekarten.
+ */
+function sod_translations_modules_extra(): array
+{
+    return [
+        'home' => [
+            'teaming_label' => ['de' => 'Mit einem kleinen Monatsbeitrag helfen', 'en' => 'Help with a small monthly amount', 'bs' => 'Pomozite malim mjesečnim iznosom'],
+            'teaming_amount' => ['de' => '1 €', 'en' => '€1', 'bs' => '1 €'],
+            'teaming_sub' => ['de' => 'im Monat', 'en' => 'per month', 'bs' => 'mjesečno'],
+            'teaming_members_singular' => ['de' => 'Mitglied', 'en' => 'member', 'bs' => 'član'],
+            'teaming_members_plural' => ['de' => 'Mitglieder', 'en' => 'members', 'bs' => 'članova'],
+            'teaming_members_note' => ['de' => 'unterstützen uns schon', 'en' => 'already support us', 'bs' => 'nas već podržava'],
+            'teaming_ring' => ['de' => 'SCHON AB 1 € IM MONAT · ', 'en' => 'FROM €1 A MONTH · ', 'bs' => 'OD 1 € MJESEČNO · '],
+        ],
+        'dogcard' => [
+            'schicksal' => ['de' => 'Schicksal', 'en' => 'Their story', 'bs' => 'Sudbina'],
         ],
     ];
 }
