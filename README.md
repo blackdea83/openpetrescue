@@ -88,14 +88,15 @@ OpenPetRescue ist ein fortlaufendes Hobbyprojekt. Bitte vor einem produktiven Ei
 
 ## Lizenz
 
-[GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0-or-later).
+**Kostenlos für jede NGO, jeden Tierschutzverein und alle Ehrenamtlichen.**
 
-Du darfst OpenPetRescue verwenden, verändern und weitergeben. Bedingungen:
+OpenPetRescue steht unter der [GNU General Public License v3.0](LICENSE) (GPL-3.0-or-later) – derselben Lizenzfamilie wie WordPress selbst – mit einer Zusatzbedingung nach § 7 (b) GPL, siehe [NOTICE](NOTICE):
 
-- **Namensnennung** der ursprünglichen Urheber: **Peter Lehner** und **Shield of Dogs**.
-- **Offenlegung von Änderungen:** Wer eine veränderte Fassung weitergibt *oder als Website betreibt*, muss den Quellcode dieser Fassung ebenfalls unter der AGPL zugänglich machen.
+- ✅ **Kostenlos** verwenden, anpassen und weitergeben.
+- 📝 **Namensnennung ist Pflicht:** **Peter Lehner** und **Shield of Dogs** müssen sichtbar genannt bleiben – im Footer der Website (z. B. „Basiert auf OpenPetRescue von Peter Lehner und Shield of Dogs“) sowie in den Lizenz- und Kopfhinweisen des Codes.
+- 🔓 Wer eine veränderte Fassung **weitergibt**, muss sie ebenfalls unter der GPL mit dieser Nennung veröffentlichen.
 
-Die mitgelieferte Schriftart *Inter* steht unter der SIL Open Font License 1.1 und ist von der AGPL nicht erfasst – siehe <https://github.com/rsms/inter>.
+Die mitgelieferte Schriftart *Inter* steht unter der SIL Open Font License 1.1 und ist von der GPL nicht erfasst – siehe <https://github.com/rsms/inter>.
 
 ## Danksagung
 

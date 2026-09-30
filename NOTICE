@@ -1,0 +1,29 @@
+OpenPetRescue
+Copyright (C) 2026 Peter Lehner und Shield of Dogs - Verein zur Hunderettung
+https://www.shieldofdogs.at
+
+Dieses Programm ist freie Software: Sie koennen es unter den Bedingungen der
+GNU General Public License, Version 3 oder (nach Ihrer Wahl) jeder spaeteren
+Version, weitergeben und/oder veraendern (siehe LICENSE).
+
+ZUSAETZLICHE BEDINGUNG nach Abschnitt 7 (b) der GPL-3.0 (Namensnennung)
+----------------------------------------------------------------------
+Jede Nutzung, veraenderte Fassung und Weitergabe muss die folgende
+Urheberangabe unveraendert erhalten und sichtbar machen:
+
+    "Basiert auf OpenPetRescue von Peter Lehner und Shield of Dogs"
+
+- in den Lizenz- und Kopfhinweisen des Quellcodes (diese Datei NOTICE
+  bleibt erhalten), und
+- auf einer mit dieser Software betriebenen Website an einer fuer Besucher
+  zugaenglichen Stelle, z. B. im Footer oder im Impressum.
+
+Der Name "Shield of Dogs" sowie dessen Logos duerfen darueber hinaus nicht
+verwendet werden, um den Eindruck einer Unterstuetzung oder Zugehoerigkeit
+zu erwecken (Abschnitt 7 (e)).
+
+---------------------------------------------------------------------------
+English summary: Licensed under GPL-3.0-or-later with an additional term
+under section 7(b): the attribution "Based on OpenPetRescue by Peter Lehner
+and Shield of Dogs" must be preserved in the code notices and shown in a
+place visible to website visitors (e.g. footer or legal notice).

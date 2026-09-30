@@ -22,7 +22,8 @@ Danke für dein Interesse an OpenPetRescue.
 ## Lizenz deiner Beiträge
 
 Mit einem Pull Request stimmst du zu, dass dein Beitrag unter der
-[AGPL-3.0-or-later](LICENSE) veröffentlicht wird – der Lizenz dieses Projekts.
+[GPL-3.0-or-later](LICENSE) mit den Zusatzbedingungen aus [NOTICE](NOTICE)
+veröffentlicht wird – der Lizenz dieses Projekts.
 
 ## Grundsätze im Code
 

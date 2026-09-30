@@ -61,6 +61,8 @@ if (!defined('ABSPATH')) {
         <div class="footer-bottom">
             <span>&copy; <?php echo esc_html(gmdate('Y')); ?> <?php sod_te('common.footer_bottom_copyright'); ?></span>
             <span><?php sod_te('common.footer_bottom_tagline'); ?></span>
+            <?php /* Pflichtangabe nach NOTICE (GPL-3.0 Abschnitt 7 b) – nicht entfernen. */ ?>
+            <span class="footer-credit">Basiert auf <a href="https://github.com/blackdea83/openpetrescue" rel="noopener">OpenPetRescue</a> von Peter Lehner und <a href="https://www.shieldofdogs.at" rel="noopener">Shield of Dogs</a></span>
         </div>
     </div>
 </footer>

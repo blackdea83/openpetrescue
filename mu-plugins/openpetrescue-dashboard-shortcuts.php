@@ -4,7 +4,7 @@
  * Description: Fester Schnellzugriff fuer die OpenPetRescue-Verwaltung im WordPress-Dashboard.
  * Version: 1.0.0
  * Author: Peter Lehner / Shield of Dogs
- * License: AGPL-3.0-or-later
+ * License: GPL-3.0-or-later
  */
 
 declare(strict_types=1);

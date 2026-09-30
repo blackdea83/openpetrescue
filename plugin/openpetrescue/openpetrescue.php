@@ -5,8 +5,8 @@
  * Version: 1.39.13
  * Requires PHP: 8.0
  * Author: Peter Lehner / Shield of Dogs
- * License: AGPL-3.0-or-later
- * License URI: https://www.gnu.org/licenses/agpl-3.0.html
+ * License: GPL-3.0-or-later
+ * License URI: https://www.gnu.org/licenses/gpl-3.0.html
  * Text Domain: openpetrescue
  */
 
