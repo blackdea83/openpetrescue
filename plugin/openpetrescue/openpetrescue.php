@@ -2,7 +2,7 @@
 /**
  * Plugin Name: OpenPetRescue
  * Description: Verwaltung für Tierschutzorganisationen: Tiere, Vermittlung, Patenschaften, Lager und Finanzen.
- * Version: 1.39.13
+ * Version: 1.40.0
  * Requires PHP: 8.0
  * Author: Peter Lehner / Shield of Dogs
  * License: GPL-3.0-or-later
@@ -18,7 +18,7 @@ if (!defined('ABSPATH')) {
 
 final class SOD_Plugin
 {
-    private const VERSION = '1.39.13';
+    private const VERSION = '1.40.0';
     private const PRIVACY_NOTICE_VERSION = '2026-07-17';
     private const GENERAL_RECORD_RETENTION_YEARS = 3;
     private const PENDING_SPONSOR_RETENTION_DAYS = 30;
@@ -228,6 +228,9 @@ final class SOD_Plugin
         add_action('before_delete_post', [self::class, 'on_sponsor_removed']);
         add_action('admin_notices', [self::class, 'admin_notices']);
         add_action('admin_notices', [self::class, 'setup_notice']);
+        add_action('admin_notices', [self::class, 'dog_form_notices']);
+        add_action('wp_dashboard_setup', [self::class, 'clear_dashboard_for_sod'], 9999);
+        add_filter('wp_handle_upload_prefilter', [self::class, 'reject_incompatible_video_upload']);
         add_action('wp_enqueue_scripts', [self::class, 'public_assets']);
         add_filter('redirect_post_location', [self::class, 'redirect_post_location'], 10, 2);
         add_filter('manage_sod_dog_posts_columns', [self::class, 'dog_admin_columns']);
@@ -2865,9 +2868,10 @@ final class SOD_Plugin
                 <p class="sod-checkbox-list sod-visibility-required">
                     <label><input type="checkbox" name="sod_show_adoption" value="1" data-sod-visibility-required <?php checked(get_post_meta($post->ID, 'sod_show_adoption', true), '1'); ?>> In Vermittlung anzeigen <span class="sod-required-star">*</span></label>
                     <label><input type="checkbox" name="sod_show_sponsorship" value="1" data-sod-visibility-required <?php checked(get_post_meta($post->ID, 'sod_show_sponsorship', true), '1'); ?>> Für Patenschaft anzeigen <span class="sod-required-star">*</span></label>
+                    <label><input type="checkbox" name="sod_story_only" value="1" data-sod-visibility-required data-sod-story-only <?php checked(get_post_meta($post->ID, 'sod_story_only', true), '1'); ?>> Nur Schicksale <span class="sod-required-star">*</span></label>
                     <span class="sod-field-badge sod-field-required">Pflicht</span>
                 </p>
-                <p class="description">Bitte mindestens Vermittlung oder Patenschaft auswählen.</p>
+                <p class="description">Bitte mindestens Vermittlung, Patenschaft oder „Nur Schicksale“ auswählen. <strong>Nur Schicksale:</strong> Das Tier erscheint ausschließlich auf der Schicksale-Seite (nicht in Vermittlung oder Patenschaft) – dafür im Bereich „Schicksal“ die Geschichte mit Kapiteln ausfüllen. Tiere mit Schicksal bleiben auch nach der Vermittlung in den Schicksalen.</p>
                 <div class="sod-admin-grid">
                     <?php self::post_content_field($post, 'sod_dog_description', 'Beschreibung für Website', 4, 'recommended'); ?>
                     <?php self::textarea_field($post->ID, 'sod_character', 'Charakter', 3, 'recommended'); ?>
@@ -2908,6 +2912,44 @@ final class SOD_Plugin
                     <?php self::textarea_field($post->ID, 'sod_status_history', 'Status-Verlauf', 4); ?>
                     <?php self::textarea_field($post->ID, 'sod_internal_notes', 'Interne Infos', 3); ?>
                 </div>
+                <?php $sod_deceased = get_post_meta($post->ID, 'sod_deceased', true) === '1'; ?>
+                <div class="sod-deceased-box" style="margin-top:14px;padding:12px 14px;border:1px solid #c3c4c7;border-left:4px solid <?php echo $sod_deceased ? '#1d2327' : '#dba617'; ?>;background:#fff">
+                    <label style="font-weight:600"><input type="checkbox" name="sod_deceased" value="1" data-sod-deceased <?php checked($sod_deceased); ?>> Verstorben</label>
+                    <?php if ($sod_deceased) : ?>
+                        <p class="description" style="margin:6px 0 0">Als verstorben markiert am <?php echo esc_html(self::display_date((string)get_post_meta($post->ID, 'sod_deceased_at', true))); ?>. Die Patenschaften wurden beendet, das Tier erscheint nicht mehr in den Listen.</p>
+                    <?php else : ?>
+                        <p class="description" style="margin:6px 0 0">Beim Speichern werden <strong>alle aktiven Patenschaften</strong> dieses Tieres beendet und das Tier aus Vermittlung und Patenschaft ausgeblendet. Die Paten bekommen <strong>keine automatische E-Mail</strong> – das Team erhält eine Liste und informiert sie persönlich. Laufende PayPal-Abos und Daueraufträge müssen danach manuell beendet werden (steht in der Liste).</p>
+                    <?php endif; ?>
+                </div>
+                <script>
+                (function () {
+                    // Name des Tieres ist Pflicht.
+                    var title = document.getElementById('title');
+                    var form = document.getElementById('post');
+                    if (title && form) {
+                        title.required = true;
+                        title.setAttribute('aria-required', 'true');
+                        form.addEventListener('submit', function (event) {
+                            if (title.value.trim() !== '') { return; }
+                            event.preventDefault();
+                            event.stopImmediatePropagation();
+                            window.alert('Bitte zuerst den Namen des Tieres als Titel eintragen.');
+                            title.focus();
+                            var spinner = form.querySelector('#publishing-action .spinner, #save-action .spinner');
+                            if (spinner) { spinner.classList.remove('is-active'); }
+                            form.querySelectorAll('#publish, #save-post').forEach(function (b) { b.classList.remove('disabled'); b.disabled = false; });
+                        }, true);
+                    }
+                    var box = document.querySelector('[data-sod-deceased]');
+                    if (box && !box.checked) {
+                        box.addEventListener('change', function () {
+                            if (box.checked && !window.confirm('Dieses Tier wirklich als verstorben markieren?\n\nBeim Speichern werden alle aktiven Patenschaften beendet.')) {
+                                box.checked = false;
+                            }
+                        });
+                    }
+                })();
+                </script>
             </section>
             <?php self::wizard_controls(); ?>
         </div>
@@ -3225,8 +3267,21 @@ final class SOD_Plugin
         if (!self::can_save($post_id, 'sod_dog_nonce', 'sod_save_dog')) {
             return;
         }
-        $has_public_visibility = isset($_POST['sod_show_adoption']) || isset($_POST['sod_show_sponsorship']);
-        if (!$has_public_visibility) {
+        // Name des Tieres ist Pflicht: ohne Titel nur als Entwurf speichern.
+        if (trim((string)$post->post_title) === '') {
+            self::add_dog_form_notice('Bitte den <strong>Namen des Tieres</strong> als Titel eintragen. Ohne Namen wird es nur als Entwurf gespeichert.');
+            if ($post->post_status !== 'draft' && $post->post_status !== 'auto-draft') {
+                remove_action('save_post_sod_dog', [self::class, 'save_dog'], 10);
+                wp_update_post(['ID' => $post_id, 'post_status' => 'draft']);
+                add_action('save_post_sod_dog', [self::class, 'save_dog'], 10, 2);
+            }
+        }
+        // Sichtbar ist ein Tier auch mit "Nur Schicksale" oder einem aktiven Schicksal.
+        $has_public_visibility = isset($_POST['sod_show_adoption']) || isset($_POST['sod_show_sponsorship'])
+            || isset($_POST['sod_story_only']) || isset($_POST['sod_story_enabled']);
+        if (isset($_POST['sod_deceased'])) {
+            delete_post_meta($post_id, '_sod_visibility_missing');
+        } elseif (!$has_public_visibility) {
             update_post_meta($post_id, '_sod_visibility_missing', '1');
             if ($post->post_status !== 'draft') {
                 remove_action('save_post_sod_dog', [self::class, 'save_dog'], 10);
@@ -3258,6 +3313,30 @@ final class SOD_Plugin
             }
             update_post_meta($post_id, $key, $value);
         }
+        // Nur Schicksale: schliesst Vermittlung und Patenschaft aus.
+        $story_only = isset($_POST['sod_story_only']);
+        update_post_meta($post_id, 'sod_story_only', $story_only ? '1' : '0');
+        if ($story_only) {
+            update_post_meta($post_id, 'sod_show_adoption', '0');
+            update_post_meta($post_id, 'sod_show_sponsorship', '0');
+        }
+        // Verstorben: nur beim erstmaligen Setzen Patenschaften beenden.
+        $was_deceased = get_post_meta($post_id, 'sod_deceased', true) === '1';
+        $is_deceased = isset($_POST['sod_deceased']);
+        update_post_meta($post_id, 'sod_deceased', $is_deceased ? '1' : '0');
+        if ($is_deceased && !$was_deceased) {
+            update_post_meta($post_id, 'sod_deceased_at', gmdate('Y-m-d'));
+            $log = trim((string)get_post_meta($post_id, 'sod_status_log', true));
+            $user = wp_get_current_user();
+            update_post_meta($post_id, 'sod_status_log', trim($log . "\n" . date_i18n('d.m.Y H:i') . ' – ' . ($user->display_name ?: 'Team') . ': als verstorben markiert'));
+            self::end_sponsorships_for_deceased_dog($post_id);
+        } elseif (!$is_deceased && $was_deceased) {
+            delete_post_meta($post_id, 'sod_deceased_at');
+        }
+        if ($is_deceased) {
+            update_post_meta($post_id, 'sod_show_adoption', '0');
+            update_post_meta($post_id, 'sod_show_sponsorship', '0');
+        }
         self::update_post_content($post_id, sanitize_textarea_field((string)($_POST['sod_dog_description'] ?? '')), 'save_dog');
         $image_ids = self::sanitize_id_list((string)($_POST['sod_dog_image_ids'] ?? ''));
         update_post_meta($post_id, 'sod_dog_image_ids', implode(',', $image_ids));
@@ -3265,6 +3344,71 @@ final class SOD_Plugin
             set_post_thumbnail($post_id, $image_ids[0]);
         }
         self::handle_dog_health_document_upload($post_id);
+    }
+
+    /**
+     * Tier als verstorben markiert: aktive Patenschaften beenden und dem Team eine Liste
+     * schicken. Paten bekommen bewusst keine automatische E-Mail.
+     */
+    private static function end_sponsorships_for_deceased_dog(int $dog_id): void
+    {
+        $lock = 'sod_deceased_end_' . $dog_id;
+        if (get_transient($lock)) {
+            return;
+        }
+        set_transient($lock, 1, 5 * MINUTE_IN_SECONDS);
+
+        $sponsor_ids = get_posts([
+            'post_type' => 'sod_sponsor',
+            'post_status' => ['publish', 'private'],
+            'numberposts' => -1,
+            'fields' => 'ids',
+            'meta_query' => [
+                ['key' => 'sod_sponsor_dog', 'value' => (string)$dog_id],
+                ['key' => 'sod_sponsor_status', 'value' => 'aktiv'],
+            ],
+        ]);
+        $dog_name = self::dog_public_name($dog_id) ?: get_the_title($dog_id);
+        $today = date_i18n('d.m.Y');
+        $lines = [];
+        foreach ($sponsor_ids as $sponsor_id) {
+            $sponsor_id = (int)$sponsor_id;
+            $method = (string)get_post_meta($sponsor_id, 'sod_sponsor_payment_method', true);
+            $pate_name = (string)get_post_field('post_title', $sponsor_id) ?: 'Pate/Patin';
+            $email = (string)get_post_meta($sponsor_id, 'sod_sponsor_email', true);
+            $phone = (string)get_post_meta($sponsor_id, 'sod_sponsor_phone', true);
+            $amount = (string)get_post_meta($sponsor_id, 'sod_sponsor_amount', true);
+            if ($method === 'paypal') {
+                $subscr_id = (string)get_post_meta($sponsor_id, 'sod_sponsor_paypal_subscr_id', true);
+                $payment_note = 'PayPal-Abo bitte im PayPal-Konto kündigen' . ($subscr_id !== '' ? ' (Abo ' . $subscr_id . ')' : '') . '.';
+            } else {
+                $payment_note = 'Dauerauftrag: Pate bitte beim persönlichen Kontakt bitten, den Dauerauftrag zu löschen.';
+            }
+            update_post_meta($sponsor_id, 'sod_sponsor_status', 'beendet');
+            update_post_meta($sponsor_id, 'sod_sponsor_end_reason', 'verstorben');
+            update_post_meta($sponsor_id, 'sod_sponsor_ended_at', gmdate('c'));
+            self::update_sponsor_retention($sponsor_id, 'beendet');
+            self::append_sponsor_note($sponsor_id, 'Patenschaft beendet am ' . $today . ', weil ' . $dog_name . ' verstorben ist. ' . $payment_note . ' Pate wird persönlich informiert.');
+            $lines[] = '- ' . $pate_name . ' (' . ($amount !== '' ? $amount . ' €/Monat, ' : '') . ($method !== '' ? $method : 'unbekannt') . ')'
+                . "\n  E-Mail: " . ($email !== '' ? $email : '–') . ($phone !== '' ? ' · Telefon: ' . $phone : '')
+                . "\n  " . $payment_note;
+        }
+        self::sync_dog_public_sponsors($dog_id);
+
+        $log = trim((string)get_post_meta($dog_id, 'sod_status_log', true));
+        update_post_meta($dog_id, 'sod_status_log', trim($log . "\n" . date_i18n('d.m.Y H:i') . ' – System: ' . count($sponsor_ids) . ' Patenschaft(en) wegen Tod beendet, Paten müssen persönlich informiert werden'));
+
+        if ($sponsor_ids) {
+            wp_mail(
+                self::notification_emails(),
+                'Verstorben: ' . $dog_name . ' – ' . count($sponsor_ids) . ' Patenschaft(en) beendet, bitte Paten informieren',
+                $dog_name . " wurde als verstorben markiert. Folgende Patenschaften wurden automatisch beendet.\n"
+                    . "Bitte informiert die Paten PERSOENLICH (es wurde keine automatische E-Mail an die Paten versendet):\n\n"
+                    . implode("\n\n", $lines),
+                array_merge(['Content-Type: text/plain; charset=UTF-8'], self::mail_headers())
+            );
+        }
+        delete_transient($lock);
     }
 
     public static function save_inventory(int $post_id, WP_Post $post): void
@@ -3669,7 +3813,8 @@ final class SOD_Plugin
                 <?php self::dog_support_progress($post_id, 'card'); ?>
             </div>
             <div class="dog-card-footer<?php echo $mode === 'sponsorship' ? ' dog-card-footer-sponsorship' : ''; ?>">
-                <a class="btn btn-primary btn-sm dog-card-detail-button" href="<?php echo esc_url($detail); ?>"><?php echo esc_html(self::t('dogcard.profil_ansehen', 'Profil ansehen')); ?></a>
+                <?php $detail_button = (array)apply_filters('sod_dog_card_detail_button', ['label' => self::t('dogcard.profil_ansehen', 'Profil ansehen'), 'url' => $detail], $post_id); ?>
+                <a class="btn btn-primary btn-sm dog-card-detail-button" href="<?php echo esc_url((string)($detail_button['url'] ?? $detail)); ?>"><?php echo esc_html((string)($detail_button['label'] ?? self::t('dogcard.profil_ansehen', 'Profil ansehen'))); ?></a>
                 <?php if ($name_sponsorship_open) : ?>
                     <a class="btn btn-secondary btn-sm dog-card-inquiry-button" href="<?php echo esc_url($detail); ?>"><?php echo esc_html(self::t('dogcard.name_sponsorship_btn', 'Namenspatenschaft übernehmen')); ?></a>
                 <?php elseif ($sponsor_signup_ready) : ?>
@@ -3777,9 +3922,14 @@ final class SOD_Plugin
                     <?php endif; ?>
                 <?php endforeach; ?>
             </div>
+            <?php
+            // Theme (Schicksale) kann die Beschreibung durch die Geschichte ersetzen.
+            $content = (string)apply_filters('sod_dog_detail_description', $content, $dog_id);
+            ?>
             <?php if (trim($content) !== '') : ?>
                 <div class="sod-dog-detail-desc"><?php echo wp_kses_post(wpautop($content)); ?></div>
             <?php endif; ?>
+            <?php echo (string)apply_filters('sod_dog_detail_story', '', $dog_id); // phpcs:ignore -- vom Theme escaped ?>
             <?php foreach (['sod_character' => self::t('dogcard.section_charakter', 'Charakter'), 'sod_needs' => self::tpl('dogcard.detail_needs_title_tpl', 'Das braucht {name}', ['name' => get_the_title($dog_id)])] as $key => $label) : ?>
                 <?php $value = trim((string)get_post_meta($dog_id, $key, true)); ?>
                 <?php if ($value !== '') : ?>
@@ -3920,6 +4070,67 @@ final class SOD_Plugin
         return $urls;
     }
 
+    /** Videoformate, die auf allen Geraeten (auch Android und aelteren Browsern) laufen. */
+    private const COMPATIBLE_VIDEO_EXTENSIONS = ['mp4', 'webm'];
+    private const VIDEO_EXTENSIONS = ['mp4', 'webm', 'mov', 'm4v', 'avi', 'wmv', 'mkv', '3gp', 'hevc', 'ogv'];
+
+    /** Lehnt beim Hochladen Videos ab, die nicht ueberall abspielbar sind. */
+    public static function reject_incompatible_video_upload(array $file): array
+    {
+        if (!empty($file['error'])) {
+            return $file;
+        }
+        $name = (string)($file['name'] ?? '');
+        $extension = strtolower((string)pathinfo($name, PATHINFO_EXTENSION));
+        $is_video = in_array($extension, self::VIDEO_EXTENSIONS, true) || str_starts_with((string)($file['type'] ?? ''), 'video/');
+        if (!$is_video) {
+            return $file;
+        }
+        $hint = ' Tipp: Am iPhone unter Einstellungen → Kamera → Formate „Maximale Kompatibilität“ wählen, oder das Video vorher in MP4 (H.264) umwandeln.';
+        if (!in_array($extension, self::COMPATIBLE_VIDEO_EXTENSIONS, true)) {
+            $file['error'] = 'Das Videoformat „.' . ($extension !== '' ? $extension : '?') . '“ läuft nicht auf allen Geräten. Bitte nur MP4- oder WebM-Videos hochladen.' . $hint;
+            return $file;
+        }
+        $tmp = (string)($file['tmp_name'] ?? '');
+        if ($extension === 'mp4' && $tmp !== '' && is_readable($tmp)) {
+            if (!function_exists('wp_read_video_metadata')) {
+                require_once ABSPATH . 'wp-admin/includes/media.php';
+            }
+            $meta = function_exists('wp_read_video_metadata') ? wp_read_video_metadata($tmp) : false;
+            $info = is_array($meta) ? strtolower((string)wp_json_encode([$meta['codec'] ?? '', $meta['dataformat'] ?? '', $meta['fileformat'] ?? ''])) : '';
+            if ($info !== '' && preg_match('/hevc|hvc1|hev1|h\.?265/', $info)) {
+                $file['error'] = 'Dieses MP4 ist im iPhone-Format HEVC (H.265) gespeichert und läuft nicht auf allen Geräten. Bitte als MP4 mit H.264 hochladen.' . $hint;
+            }
+        }
+        return $file;
+    }
+
+    private static function add_dog_form_notice(string $html): void
+    {
+        $key = 'sod_dog_notice_' . get_current_user_id();
+        $list = get_transient($key);
+        $list = is_array($list) ? $list : [];
+        $list[] = $html;
+        set_transient($key, array_values(array_unique($list)), 5 * MINUTE_IN_SECONDS);
+    }
+
+    public static function dog_form_notices(): void
+    {
+        $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+        if (!$screen || $screen->post_type !== 'sod_dog' || $screen->base !== 'post') {
+            return;
+        }
+        $key = 'sod_dog_notice_' . get_current_user_id();
+        $list = get_transient($key);
+        if (!is_array($list) || !$list) {
+            return;
+        }
+        delete_transient($key);
+        foreach ($list as $html) {
+            echo '<div class="notice notice-error is-dismissible"><p>' . wp_kses($html, ['strong' => []]) . '</p></div>';
+        }
+    }
+
     private static function dog_video_url(int $dog_id): string
     {
         return (string)(self::dog_video_urls($dog_id)[0] ?? '');
@@ -4040,6 +4251,12 @@ final class SOD_Plugin
             $amount += self::money_number((string)get_post_meta((int)$sponsor_id, 'sod_sponsor_amount', true));
         }
         return $amount;
+    }
+
+    /** Fuer das Theme (Schicksale, Hero, Teilen): Monatsbedarf, gesichert, offen. */
+    public static function dog_support_summary(int $dog_id): array
+    {
+        return self::dog_support_amounts($dog_id);
     }
 
     private static function dog_support_amounts(int $dog_id, int $exclude_id = 0): array
@@ -4594,7 +4811,9 @@ final class SOD_Plugin
                 update_post_meta($finance_id, 'sod_finance_dog', $name_sponsorship_dog_id);
             }
             self::update_finance_retention((int)$finance_id);
-            self::send_finance_receipt_email((int)$finance_id);
+            // Einmalspende: herzliche Dankes-Mail statt automatischer Spendenbestaetigung;
+            // die Bestaetigung kann im Spendeneintrag weiterhin von Hand verschickt werden.
+            self::send_donation_thanks_email((int)$finance_id);
         }
 
         if ($name_sponsorship_dog_id > 0) {
@@ -8182,6 +8401,7 @@ self.addEventListener('fetch', event => {
         $months = [];
         $categories = [];
         $years = [];
+        $split = [];
         $category_labels = self::finance_category_options();
 
         foreach ($query->posts as $post_id) {
@@ -8199,11 +8419,16 @@ self.addEventListener('fetch', event => {
             $type = (string)get_post_meta($post_id, 'sod_finance_type', true);
             $amount = self::numeric_quantity((string)get_post_meta($post_id, 'sod_finance_amount', true));
             if (!isset($months[$month])) {
-                $months[$month] = ['einnahmen' => 0.0, 'ausgaben' => 0.0, 'sachspenden' => 0, 'eintraege' => 0];
+                $months[$month] = ['einnahmen' => 0.0, 'ausgaben' => 0.0, 'sachspenden' => 0, 'eintraege' => 0, 'split' => []];
             }
             $months[$month]['eintraege']++;
             if ($type === 'spende' || $type === 'erstattung') {
                 $months[$month]['einnahmen'] += $amount;
+                $kind = self::finance_income_kind($post_id);
+                $channel = self::finance_channel($post_id);
+                $months[$month]['split'][$kind][$channel] = ($months[$month]['split'][$kind][$channel] ?? 0.0) + $amount;
+                $split[$kind][$channel]['sum'] = ($split[$kind][$channel]['sum'] ?? 0.0) + $amount;
+                $split[$kind][$channel]['count'] = ($split[$kind][$channel]['count'] ?? 0) + 1;
             } elseif ($type === 'ausgabe') {
                 $months[$month]['ausgaben'] += $amount;
             } elseif ($type === 'sachspende') {
@@ -8224,7 +8449,7 @@ self.addEventListener('fetch', event => {
         ksort($categories);
         $years = array_keys($years);
         rsort($years);
-        return ['months' => $months, 'categories' => $categories, 'years' => $years];
+        return ['months' => $months, 'categories' => $categories, 'years' => $years, 'split' => $split];
     }
 
     /**
@@ -8263,13 +8488,16 @@ self.addEventListener('fetch', event => {
                 'date' => $iso,
                 'dog' => $dog_id > 0 ? (get_the_title($dog_id) ?: '') : '',
                 'donor' => $donor !== '' ? $donor : (get_the_title($post_id) ?: ('Eintrag #' . $post_id)),
-                'payment_method' => $payment_labels[$payment_method] ?? ($payment_labels[''] ?? '– nicht angegeben –'),
+                'payment_method' => $payment_method === '' && self::finance_channel($post_id) !== 'sonstige'
+                    ? (self::finance_channel_labels()[self::finance_channel($post_id)] ?? '')
+                    : ($payment_labels[$payment_method] ?? ($payment_labels[''] ?? '– nicht angegeben –')),
+                'kind' => self::finance_kind_labels()[self::finance_income_kind($post_id)] ?? '',
                 'amount' => self::numeric_quantity((string)get_post_meta($post_id, 'sod_finance_amount', true)),
                 'url' => get_edit_post_link($post_id, 'raw') ?: admin_url('edit.php?post_type=sod_finance'),
             ];
         }
 
-        $key = in_array($sort, ['dog', 'payment_method', 'date', 'donor', 'amount'], true) ? $sort : 'date';
+        $key = in_array($sort, ['dog', 'payment_method', 'date', 'donor', 'amount', 'kind'], true) ? $sort : 'date';
         usort($rows, static function (array $a, array $b) use ($key, $order): int {
             $value_a = $a[$key];
             $value_b = $b[$key];
@@ -8384,7 +8612,7 @@ self.addEventListener('fetch', event => {
         $total_in = array_sum(array_column($report['months'], 'einnahmen'));
         $total_out = array_sum(array_column($report['months'], 'ausgaben'));
         $sort = sanitize_text_field((string)($_GET['sod_sort'] ?? ''));
-        $sort = in_array($sort, ['dog', 'payment_method', 'date', 'donor', 'amount'], true) ? $sort : 'date';
+        $sort = in_array($sort, ['dog', 'payment_method', 'date', 'donor', 'amount', 'kind'], true) ? $sort : 'date';
         $order = sanitize_text_field((string)($_GET['sod_order'] ?? '')) === 'asc' ? 'asc' : 'desc';
         $income_entries = self::finance_income_entries($year, $sort, $order);
         $export_url = wp_nonce_url(
@@ -8414,6 +8642,35 @@ self.addEventListener('fetch', event => {
             return sprintf('<a href="%s">%s%s</a>', esc_url($url), esc_html($label), esc_html($indicator));
         };
         ?>
+        <style>
+            .sod-print-header { display: none; }
+            @media print {
+                .sod-print-header {
+                    display: flex !important;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 16px;
+                    border-bottom: 2px solid #204060;
+                    padding-bottom: 12px;
+                    margin-bottom: 16px;
+                }
+                .sod-print-header .sod-print-logo { width: 48px; height: 48px; object-fit: contain; flex: 0 0 auto; }
+                .sod-print-header-text { display: flex; flex-direction: column; flex: 1 1 auto; font-size: 12px; color: #111; }
+                .sod-print-header-text strong { font-size: 14px; color: #204060; }
+                .sod-print-confidential {
+                    flex: 0 0 auto;
+                    font-size: 11px;
+                    font-weight: 700;
+                    letter-spacing: .04em;
+                    text-transform: uppercase;
+                    color: #a00;
+                    border: 1px solid #a00;
+                    border-radius: 4px;
+                    padding: 3px 8px;
+                    white-space: nowrap;
+                }
+            }
+        </style>
         <div class="wrap sod-finance-report">
             <div class="sod-print-header">
                 <img class="sod-print-logo" src="<?php echo esc_url(get_theme_file_uri('assets/images/logo.png')); ?>" alt="<?php echo esc_attr(self::org()['name']); ?>">
@@ -8441,31 +8698,114 @@ self.addEventListener('fetch', event => {
                 <button class="button button-primary" type="submit">Anzeigen</button>
             </form>
 
+            <?php
+            $split = $report['split'];
+            $channels = self::finance_report_channels($split);
+            $channel_labels = self::finance_channel_labels();
+            $kind_labels = self::finance_kind_labels();
+            $kinds = array_values(array_filter(['einmalspende', 'patenschaft', 'erstattung'], static fn (string $k): bool => $k !== 'erstattung' || !empty($split['erstattung'])));
+            $cell_sum = static fn (string $kind, string $channel): float => (float)($split[$kind][$channel]['sum'] ?? 0);
+            $cell_count = static fn (string $kind, string $channel): int => (int)($split[$kind][$channel]['count'] ?? 0);
+            $kind_total = static fn (string $kind): float => array_sum(array_map(static fn (array $c): float => (float)($c['sum'] ?? 0), (array)($split[$kind] ?? [])));
+            $kind_count = static fn (string $kind): int => array_sum(array_map(static fn (array $c): int => (int)($c['count'] ?? 0), (array)($split[$kind] ?? [])));
+            $money = static fn (float $v): string => self::format_quantity($v) . ' €';
+            ?>
             <div class="sod-overview-cards">
-                <div class="sod-overview-card"><span>Einnahmen</span><strong><?php echo esc_html(self::format_quantity($total_in) . ' €'); ?></strong></div>
-                <div class="sod-overview-card"><span>Ausgaben</span><strong><?php echo esc_html(self::format_quantity($total_out) . ' €'); ?></strong></div>
-                <div class="sod-overview-card"><span>Saldo</span><strong><?php echo esc_html(self::format_quantity($total_in - $total_out) . ' €'); ?></strong></div>
+                <div class="sod-overview-card"><span>Einnahmen gesamt</span><strong><?php echo esc_html($money($total_in)); ?></strong></div>
+                <div class="sod-overview-card"><span>davon Einmalspenden</span><strong><?php echo esc_html($money($kind_total('einmalspende'))); ?></strong></div>
+                <div class="sod-overview-card"><span>davon Patenschaften</span><strong><?php echo esc_html($money($kind_total('patenschaft'))); ?></strong></div>
+                <div class="sod-overview-card"><span>Ausgaben</span><strong><?php echo esc_html($money($total_out)); ?></strong></div>
+                <div class="sod-overview-card"><span>Saldo</span><strong><?php echo esc_html($money($total_in - $total_out)); ?></strong></div>
                 <div class="sod-overview-card"><span>Sachspenden</span><strong><?php echo esc_html((string)array_sum(array_column($report['months'], 'sachspenden'))); ?></strong></div>
             </div>
 
-            <h2>Monatsübersicht</h2>
+            <style>
+                .sod-finance-split td, .sod-finance-split th { text-align: right; white-space: nowrap; }
+                .sod-finance-split td:first-child, .sod-finance-split th:first-child { text-align: left; }
+                .sod-finance-split small { color: #646970; margin-left: 4px; }
+                .sod-finance-split tr.sod-total td { font-weight: 700; border-top: 2px solid #c3c4c7; }
+                .sod-finance-split th.sod-group { text-align: center; border-bottom: 1px solid #c3c4c7; }
+                .sod-finance-split .sod-sep { border-left: 2px solid #dcdcde; }
+            </style>
+            <h2>Einnahmen nach Art und Zahlungsweg</h2>
             <div class="sod-admin-table-scroll">
-            <table class="widefat striped">
-                <thead><tr><th scope="col">Monat</th><th scope="col">Einnahmen</th><th scope="col">Ausgaben</th><th scope="col">Saldo</th><th scope="col">Sachspenden</th><th scope="col">Einträge</th></tr></thead>
+            <table class="widefat striped sod-finance-split">
+                <thead><tr><th scope="col">Art</th><?php foreach ($channels as $channel) : ?><th scope="col"><?php echo esc_html($channel_labels[$channel]); ?></th><?php endforeach; ?><th scope="col" class="sod-sep">Gesamt</th></tr></thead>
                 <tbody>
-                <?php if (!$report['months']) : ?>
-                    <tr><td colspan="6">Keine Einträge für dieses Jahr.</td></tr>
-                <?php endif; ?>
-                <?php foreach ($report['months'] as $month => $sums) : ?>
+                <?php foreach ($kinds as $kind) : ?>
                     <tr>
-                        <td><?php echo esc_html($month_names[$month] ?? (string)$month); ?></td>
-                        <td><?php echo esc_html(self::format_quantity($sums['einnahmen']) . ' €'); ?></td>
-                        <td><?php echo esc_html(self::format_quantity($sums['ausgaben']) . ' €'); ?></td>
-                        <td><?php echo esc_html(self::format_quantity($sums['einnahmen'] - $sums['ausgaben']) . ' €'); ?></td>
-                        <td><?php echo esc_html((string)$sums['sachspenden']); ?></td>
-                        <td><?php echo esc_html((string)$sums['eintraege']); ?></td>
+                        <td><?php echo esc_html($kind_labels[$kind]); ?></td>
+                        <?php foreach ($channels as $channel) : ?><td><?php echo esc_html($money($cell_sum($kind, $channel))); ?><small>(<?php echo (int)$cell_count($kind, $channel); ?>)</small></td><?php endforeach; ?>
+                        <td class="sod-sep"><?php echo esc_html($money($kind_total($kind))); ?><small>(<?php echo (int)$kind_count($kind); ?>)</small></td>
                     </tr>
                 <?php endforeach; ?>
+                    <tr class="sod-total">
+                        <td>Gesamt</td>
+                        <?php foreach ($channels as $channel) : $sum = 0.0; $count = 0; foreach ($kinds as $kind) { $sum += $cell_sum($kind, $channel); $count += $cell_count($kind, $channel); } ?><td><?php echo esc_html($money($sum)); ?><small>(<?php echo (int)$count; ?>)</small></td><?php endforeach; ?>
+                        <td class="sod-sep"><?php echo esc_html($money($total_in)); ?><small>(<?php echo (int)array_sum(array_map($kind_count, $kinds)); ?>)</small></td>
+                    </tr>
+                </tbody>
+            </table>
+            </div>
+            <p class="description">In Klammern: Anzahl der Zahlungen. Patenschaften = automatisch erfasste Zahlungen aus PayPal-Abo und Dauerauftrag sowie Einträge mit „Art der Einnahme: Patenschaft“. Alles andere zählt als Einmalspende; manuell erfasste Einträge lassen sich über das Feld „Art der Einnahme“ zuordnen.</p>
+
+            <h2>Monatsübersicht</h2>
+            <div class="sod-admin-table-scroll">
+            <table class="widefat striped sod-finance-split">
+                <thead>
+                    <tr>
+                        <th scope="col" rowspan="2">Monat</th>
+                        <?php foreach (['einmalspende', 'patenschaft'] as $kind) : ?><th scope="colgroup" colspan="<?php echo count($channels) + 1; ?>" class="sod-group sod-sep"><?php echo esc_html($kind_labels[$kind]); ?></th><?php endforeach; ?>
+                        <?php if (in_array('erstattung', $kinds, true)) : ?><th scope="col" rowspan="2" class="sod-sep">Erstattungen</th><?php endif; ?>
+                        <th scope="col" rowspan="2" class="sod-sep">Einnahmen gesamt</th><th scope="col" rowspan="2">Ausgaben</th><th scope="col" rowspan="2">Saldo</th><th scope="col" rowspan="2">Sachspenden</th>
+                    </tr>
+                    <tr>
+                        <?php foreach (['einmalspende', 'patenschaft'] as $kind) : ?>
+                            <?php foreach ($channels as $i => $channel) : ?><th scope="col"<?php echo $i === 0 ? ' class="sod-sep"' : ''; ?>><?php echo esc_html($channel === 'mollie' ? 'Mollie' : ($channel === 'bank' ? 'Bank' : $channel_labels[$channel])); ?></th><?php endforeach; ?>
+                            <th scope="col">Summe</th>
+                        <?php endforeach; ?>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php if (!$report['months']) : ?>
+                    <tr><td colspan="<?php echo 6 + 2 * (count($channels) + 1); ?>">Keine Einträge für dieses Jahr.</td></tr>
+                <?php endif; ?>
+                <?php
+                $year_row = ['einnahmen' => 0.0, 'ausgaben' => 0.0, 'sachspenden' => 0, 'split' => []];
+                $render_row = static function (string $label, array $sums, bool $total) use ($channels, $kinds, $money): void {
+                    echo '<tr' . ($total ? ' class="sod-total"' : '') . '><td>' . esc_html($label) . '</td>';
+                    foreach (['einmalspende', 'patenschaft'] as $kind) {
+                        $group = 0.0;
+                        foreach ($channels as $i => $channel) {
+                            $value = (float)($sums['split'][$kind][$channel] ?? 0);
+                            $group += $value;
+                            echo '<td' . ($i === 0 ? ' class="sod-sep"' : '') . '>' . esc_html($money($value)) . '</td>';
+                        }
+                        echo '<td><strong>' . esc_html($money($group)) . '</strong></td>';
+                    }
+                    if (in_array('erstattung', $kinds, true)) {
+                        echo '<td class="sod-sep">' . esc_html($money(array_sum((array)($sums['split']['erstattung'] ?? [])))) . '</td>';
+                    }
+                    echo '<td class="sod-sep">' . esc_html($money((float)$sums['einnahmen'])) . '</td>';
+                    echo '<td>' . esc_html($money((float)$sums['ausgaben'])) . '</td>';
+                    echo '<td>' . esc_html($money((float)$sums['einnahmen'] - (float)$sums['ausgaben'])) . '</td>';
+                    echo '<td>' . esc_html((string)$sums['sachspenden']) . '</td></tr>';
+                };
+                foreach ($report['months'] as $month => $sums) {
+                    $render_row($month_names[$month] ?? (string)$month, $sums, false);
+                    $year_row['einnahmen'] += (float)$sums['einnahmen'];
+                    $year_row['ausgaben'] += (float)$sums['ausgaben'];
+                    $year_row['sachspenden'] += (int)$sums['sachspenden'];
+                    foreach ((array)$sums['split'] as $kind => $by_channel) {
+                        foreach ($by_channel as $channel => $value) {
+                            $year_row['split'][$kind][$channel] = ($year_row['split'][$kind][$channel] ?? 0.0) + (float)$value;
+                        }
+                    }
+                }
+                if ($report['months']) {
+                    $render_row('Gesamt ' . $year, $year_row, true);
+                }
+                ?>
                 </tbody>
             </table>
             </div>
@@ -8498,19 +8838,21 @@ self.addEventListener('fetch', event => {
                         <th scope="col"><?php echo $sort_link('date', 'Datum'); ?></th>
                         <th scope="col"><?php echo $sort_link('dog', 'Hund'); ?></th>
                         <th scope="col"><?php echo $sort_link('donor', 'Name'); ?></th>
+                        <th scope="col"><?php echo $sort_link('kind', 'Art'); ?></th>
                         <th scope="col"><?php echo $sort_link('payment_method', 'Zahlungsart'); ?></th>
                         <th scope="col"><?php echo $sort_link('amount', 'Betrag'); ?></th>
                     </tr>
                 </thead>
                 <tbody>
                 <?php if (!$income_entries) : ?>
-                    <tr><td colspan="5">Keine Einnahmen für dieses Jahr.</td></tr>
+                    <tr><td colspan="6">Keine Einnahmen für dieses Jahr.</td></tr>
                 <?php endif; ?>
                 <?php foreach ($income_entries as $row) : ?>
                     <tr>
                         <td><?php echo esc_html(self::display_date($row['date'])); ?></td>
                         <td><?php echo $row['dog'] !== '' ? esc_html($row['dog']) : '–'; ?></td>
                         <td><a href="<?php echo esc_url($row['url']); ?>"><?php echo esc_html($row['donor']); ?></a></td>
+                        <td><?php echo esc_html($row['kind']); ?></td>
                         <td><?php echo esc_html($row['payment_method']); ?></td>
                         <td><?php echo esc_html(self::format_quantity($row['amount']) . ' €'); ?></td>
                     </tr>
@@ -8521,7 +8863,7 @@ self.addEventListener('fetch', event => {
             <p class="description">Beträge werden aus dem Feld „Betrag / Menge" gelesen; Einträge ohne Zahl zählen mit 0. Sachspenden werden gezählt, nicht summiert.</p>
 
             <?php if ($year === (int)date_i18n('Y')) : ?>
-            <h2>Paten ohne Zahlungseintrag <?php echo esc_html($month_names[$current_month] ?? (string)$current_month); ?></h2>
+            <h2 id="paten-ohne-zahlung">Paten ohne Zahlungseintrag <?php echo esc_html($month_names[$current_month] ?? (string)$current_month); ?></h2>
             <div class="sod-admin-table-scroll">
             <table class="widefat striped">
                 <thead><tr><th scope="col">Name</th><th scope="col">Hund</th><th scope="col">Zahlungsart</th><th scope="col">Betrag</th></tr></thead>
@@ -8562,17 +8904,48 @@ self.addEventListener('fetch', event => {
         if (!$out) {
             exit;
         }
-        fputcsv($out, ['Monat', 'Einnahmen', 'Ausgaben', 'Saldo', 'Sachspenden', 'Einträge'], ';');
-        foreach ($report['months'] as $month => $sums) {
-            fputcsv($out, array_map([self::class, 'csv_cell'], [
-                $month_names[$month] ?? (string)$month,
-                self::format_quantity($sums['einnahmen']),
-                self::format_quantity($sums['ausgaben']),
-                self::format_quantity($sums['einnahmen'] - $sums['ausgaben']),
-                (string)$sums['sachspenden'],
-                (string)$sums['eintraege'],
-            ]), ';');
+        $channels = self::finance_report_channels($report['split']);
+        $channel_labels = self::finance_channel_labels();
+        $head = ['Monat'];
+        foreach (['Einmalspenden', 'Patenschaften'] as $group) {
+            foreach ($channels as $channel) {
+                $head[] = $group . ' ' . $channel_labels[$channel];
+            }
+            $head[] = $group . ' Summe';
         }
+        fputcsv($out, array_merge($head, ['Erstattungen', 'Einnahmen gesamt', 'Ausgaben', 'Saldo', 'Sachspenden', 'Einträge']), ';');
+        $total = ['einnahmen' => 0.0, 'ausgaben' => 0.0, 'sachspenden' => 0, 'eintraege' => 0, 'split' => []];
+        $csv_row = static function (string $label, array $sums) use ($channels): array {
+            $row = [$label];
+            foreach (['einmalspende', 'patenschaft'] as $kind) {
+                $group = 0.0;
+                foreach ($channels as $channel) {
+                    $value = (float)($sums['split'][$kind][$channel] ?? 0);
+                    $group += $value;
+                    $row[] = self::format_quantity($value);
+                }
+                $row[] = self::format_quantity($group);
+            }
+            $row[] = self::format_quantity(array_sum((array)($sums['split']['erstattung'] ?? [])));
+            $row[] = self::format_quantity((float)$sums['einnahmen']);
+            $row[] = self::format_quantity((float)$sums['ausgaben']);
+            $row[] = self::format_quantity((float)$sums['einnahmen'] - (float)$sums['ausgaben']);
+            $row[] = (string)$sums['sachspenden'];
+            $row[] = (string)$sums['eintraege'];
+            return $row;
+        };
+        foreach ($report['months'] as $month => $sums) {
+            fputcsv($out, array_map([self::class, 'csv_cell'], $csv_row($month_names[$month] ?? (string)$month, $sums)), ';');
+            foreach (['einnahmen', 'ausgaben', 'sachspenden', 'eintraege'] as $k) {
+                $total[$k] += $sums[$k];
+            }
+            foreach ((array)$sums['split'] as $kind => $by_channel) {
+                foreach ($by_channel as $channel => $value) {
+                    $total['split'][$kind][$channel] = ($total['split'][$kind][$channel] ?? 0.0) + (float)$value;
+                }
+            }
+        }
+        fputcsv($out, array_map([self::class, 'csv_cell'], $csv_row('Gesamt ' . $year, $total)), ';');
         fputcsv($out, [], ';');
         fputcsv($out, ['Zweck', 'Einnahmen', 'Ausgaben'], ';');
         foreach ($report['categories'] as $label => $sums) {
@@ -8650,7 +9023,7 @@ self.addEventListener('fetch', event => {
 
         $year = absint($_GET['sod_year'] ?? 0) ?: (int)date_i18n('Y');
         $sort = sanitize_text_field((string)($_GET['sod_sort'] ?? ''));
-        $sort = in_array($sort, ['dog', 'payment_method', 'date', 'donor', 'amount'], true) ? $sort : 'date';
+        $sort = in_array($sort, ['dog', 'payment_method', 'date', 'donor', 'amount', 'kind'], true) ? $sort : 'date';
         $order = sanitize_text_field((string)($_GET['sod_order'] ?? '')) === 'asc' ? 'asc' : 'desc';
         $rows = self::finance_income_entries($year, $sort, $order);
 
@@ -8660,12 +9033,13 @@ self.addEventListener('fetch', event => {
         if (!$out) {
             exit;
         }
-        fputcsv($out, ['Datum', 'Hund', 'Name', 'Zahlungsart', 'Betrag'], ';');
+        fputcsv($out, ['Datum', 'Hund', 'Name', 'Art', 'Zahlungsart', 'Betrag'], ';');
         foreach ($rows as $row) {
             fputcsv($out, array_map([self::class, 'csv_cell'], [
                 self::display_date($row['date']),
                 $row['dog'],
                 $row['donor'],
+                $row['kind'],
                 $row['payment_method'],
                 self::format_quantity($row['amount']),
             ]), ';');
@@ -9441,6 +9815,183 @@ self.addEventListener('fetch', event => {
 
         wp_safe_redirect(add_query_arg('sod_notice', 'receipt_send_failed', get_edit_post_link($finance_id, 'raw') ?: admin_url('edit.php?post_type=sod_finance')));
         exit;
+    }
+
+    /**
+     * Dankes-E-Mail nach einer Einmalspende. Ersetzt bei Einmalspenden die automatische
+     * Spendenbestaetigung; diese kann im Spendeneintrag weiterhin von Hand verschickt werden.
+     * Enthaelt einen Hinweis auf Patenschaften mit zwei Tieren, die gerade am dringendsten
+     * Paten suchen.
+     */
+    private static function send_donation_thanks_email(int $finance_id): bool
+    {
+        $finance = get_post($finance_id);
+        if (!$finance instanceof WP_Post || $finance->post_type !== 'sod_finance') {
+            return false;
+        }
+        if (trim((string)get_post_meta($finance_id, 'sod_finance_thanks_sent_at', true)) !== '') {
+            return true;
+        }
+        $email = sanitize_email((string)get_post_meta($finance_id, 'sod_finance_donor_email', true));
+        if ($email === '') {
+            update_post_meta($finance_id, 'sod_finance_thanks_error', 'missing_email');
+            return false;
+        }
+        $donor = trim((string)get_post_meta($finance_id, 'sod_finance_donor', true));
+        $first_name = $donor !== '' ? (string)strtok($donor, ' ') : '';
+        $subject = $first_name !== ''
+            ? 'Danke, ' . $first_name . ' – deine Spende ist angekommen ❤️'
+            : 'Danke – deine Spende ist angekommen ❤️';
+        $sent = wp_mail(
+            $email,
+            $subject,
+            self::donation_thanks_email_html($finance_id),
+            array_merge(['Content-Type: text/html; charset=UTF-8'], self::mail_headers())
+        );
+        if ($sent) {
+            update_post_meta($finance_id, 'sod_finance_thanks_sent_at', current_time('mysql'));
+            delete_post_meta($finance_id, 'sod_finance_thanks_error');
+            return true;
+        }
+        update_post_meta($finance_id, 'sod_finance_thanks_error', 'wp_mail_failed');
+        return false;
+    }
+
+    /** Bis zu $limit Tiere, die am dringendsten Paten suchen (geringste Deckung zuerst). */
+    private static function dogs_needing_sponsors_for_mail(int $limit = 2): array
+    {
+        $dogs = get_posts([
+            'post_type' => 'sod_dog',
+            'post_status' => 'publish',
+            'numberposts' => 60,
+            'meta_query' => [['key' => 'sod_show_sponsorship', 'value' => '1']],
+        ]);
+        $candidates = [];
+        foreach ($dogs as $dog) {
+            if (get_post_meta($dog->ID, 'sod_deceased', true) === '1' || (string)get_post_meta($dog->ID, 'sod_status', true) === 'vermittelt') {
+                continue;
+            }
+            $support = self::dog_support_summary($dog->ID);
+            $target = (float)($support['target'] ?? 0);
+            $remaining = (float)($support['remaining'] ?? 0);
+            $image = self::dog_poster_url($dog->ID, 'medium_large');
+            if ($target <= 0 || $remaining < 1 || $image === '') {
+                continue;
+            }
+            $candidates[] = ['dog' => $dog, 'covered' => ($target - $remaining) / $target, 'image' => $image];
+        }
+        usort($candidates, static fn (array $a, array $b): int => $a['covered'] <=> $b['covered']);
+        return array_slice($candidates, 0, $limit);
+    }
+
+    /** Ein Satz ueber das Tier: erster Satz aus Schicksal-Kurzfassung, Beschreibung oder Charakter. */
+    private static function dog_mail_teaser(int $dog_id): string
+    {
+        foreach ([(string)get_post_meta($dog_id, 'sod_story_summary', true), (string)get_post_field('post_content', $dog_id), (string)get_post_meta($dog_id, 'sod_character', true)] as $text) {
+            $text = trim((string)preg_replace('/\s+/u', ' ', wp_strip_all_tags($text)));
+            if ($text === '') {
+                continue;
+            }
+            $sentence = preg_match('/^(.{20,}?[.!?])(\s|$)/u', $text, $m) ? $m[1] : $text;
+            return mb_strlen($sentence) > 110 ? rtrim(mb_substr($sentence, 0, 107), " ,;–-") . '…' : $sentence;
+        }
+        return '';
+    }
+
+    /** Einfacher E-Mail-Rahmen mit Logo, Vereinsname und Anschrift aus den Einstellungen. */
+    private static function branded_email_html(string $heading, string $body_html): string
+    {
+        $org = self::org();
+        $logo_url = get_theme_file_uri('assets/images/logo.png');
+        $address = trim(implode(', ', array_filter([$org['street'], trim($org['zip'] . ' ' . $org['city'])])));
+        ob_start();
+        ?>
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title><?php echo esc_html($heading); ?></title>
+</head>
+<body style="margin:0;padding:0;background:#f2f3f5;font-family:Arial,Helvetica,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f2f3f5;padding:28px 12px;">
+    <tr><td align="center">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:14px;overflow:hidden;">
+        <tr>
+          <td style="background:#0b141b;padding:26px 30px;">
+            <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+              <td style="padding-right:12px;"><img src="<?php echo esc_url($logo_url); ?>" width="40" height="40" alt="" style="display:block;border-radius:8px;"></td>
+              <td style="color:#ffffff;font-weight:bold;font-size:15px;letter-spacing:.04em;text-transform:uppercase;font-family:Arial,Helvetica,sans-serif;"><?php echo esc_html($org['name']); ?></td>
+            </tr></table>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:32px 30px 8px;">
+            <h1 style="margin:0 0 18px;font-size:22px;line-height:1.3;color:#0b141b;font-family:Arial,Helvetica,sans-serif;"><?php echo esc_html($heading); ?></h1>
+            <div style="font-size:15px;line-height:1.65;color:#334155;">
+              <?php echo $body_html; // phpcs:ignore -- oben escaped zusammengesetzt ?>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:22px 30px 28px;border-top:1px solid #eef0f2;">
+            <p style="margin:0;font-size:12px;line-height:1.6;color:#94a3b8;font-family:Arial,Helvetica,sans-serif;">
+              <?php echo esc_html($org['name'] . ($org['registration'] !== '' ? ' · ' . $org['registration'] : '')); ?><?php if ($address !== '') : ?><br><?php echo esc_html($address); ?><?php endif; ?>
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>
+        <?php
+        return (string)ob_get_clean();
+    }
+
+    private static function donation_thanks_email_html(int $finance_id): string
+    {
+        $donor = trim((string)get_post_meta($finance_id, 'sod_finance_donor', true));
+        $first_name = $donor !== '' ? (string)strtok($donor, ' ') : '';
+        $amount = self::numeric_quantity((string)get_post_meta($finance_id, 'sod_finance_amount', true));
+        $amount_label = $amount > 0 ? self::format_quantity($amount) . ' €' : '';
+        $p = static fn (string $html, string $margin = '0 0 14px'): string => '<p style="margin:' . $margin . ';">' . $html . '</p>';
+
+        $body = $p($amount_label !== ''
+                ? 'Deine Spende über <strong>' . esc_html($amount_label) . '</strong> ist gerade bei uns angekommen. Wir möchten dir kurz erzählen, was sie bewirkt.'
+                : 'Deine Spende ist gerade bei uns angekommen. Wir möchten dir kurz erzählen, was sie bewirkt.')
+            . $p('Irgendwo wartet heute ein Tier, das gestern nicht wusste, ob es etwas zu fressen bekommt. Mit deiner Hilfe bekommt es das. Und einen Tierarzt, wenn es krank ist. Und einen sicheren Platz, wenn es nachts kalt wird.')
+            . $p('Viele unserer Tiere wurden ausgesetzt oder zurückgelassen. Sie werden nie erfahren, wie du heißt. Aber sie spüren, dass sich jemand um sie kümmert. Ab heute gehörst du dazu.')
+            . $p('<strong>Danke, dass du nicht weggeschaut hast.</strong>', '0 0 22px');
+
+        $cards = '';
+        foreach (self::dogs_needing_sponsors_for_mail(2) as $item) {
+            $dog = $item['dog'];
+            $cards .= '<td width="50%" style="padding:6px;vertical-align:top;"><a href="' . esc_url((string)get_permalink($dog)) . '" style="text-decoration:none;color:#0b141b;">'
+                . '<img src="' . esc_url($item['image']) . '" alt="' . esc_attr($dog->post_title) . '" width="226" style="display:block;width:100%;height:150px;object-fit:cover;border-radius:10px;">'
+                . '<span style="display:block;margin-top:8px;font-weight:bold;font-size:14.5px;">' . esc_html($dog->post_title) . '</span>'
+                . '<span style="display:block;font-size:12.5px;color:#64748b;line-height:1.4;">' . esc_html(self::dog_mail_teaser($dog->ID)) . '</span>'
+                . '</a></td>';
+        }
+        if ($cards !== '') {
+            $body .= '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fbf6ea;border-radius:12px;">'
+                . '<tr><td style="padding:20px 20px 6px;">'
+                . '<p style="margin:0 0 6px;font-size:16px;font-weight:bold;color:#0b141b;">Möchtest du ein Tier ein Stück begleiten?</p>'
+                . '<p style="margin:0 0 14px;font-size:14.5px;line-height:1.6;color:#475569;">Manche unserer Tiere suchen noch Paten. Mit einem kleinen Monatsbetrag hilfst du einem bestimmten Tier – du kennst seinen Namen, seine Geschichte und siehst, wie es sich entwickelt.</p>'
+                . '</td></tr>'
+                . '<tr><td style="padding:0 14px 14px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>' . $cards . '</tr></table></td></tr>'
+                . '</table>'
+                . '<table role="presentation" cellpadding="0" cellspacing="0" style="margin:22px 0 10px;"><tr><td style="background:#e4a91f;border-radius:8px;">'
+                . '<a href="' . esc_url(self::page_url('patenschaft') ?: home_url('/patenschaft/')) . '" style="display:inline-block;padding:13px 24px;font-weight:bold;font-size:14.5px;color:#06111a;text-decoration:none;font-family:Arial,Helvetica,sans-serif;">Tiere kennenlernen, die Paten suchen</a>'
+                . '</td></tr></table>';
+        }
+        $body .= '<div style="margin-top:18px;">'
+            . $p('Von Herzen danke,', '0 0 4px')
+            . $p('das ganze Team von <strong>' . esc_html(self::org()['name']) . '</strong>', '0 0 18px')
+            . '<p style="margin:0 0 6px;font-size:13px;color:#64748b;">Du brauchst eine Spendenbestätigung? Antworte einfach auf diese E-Mail, wir schicken sie dir gerne.</p>'
+            . '</div>';
+
+        return self::branded_email_html($first_name !== '' ? 'Danke, ' . $first_name . '.' : 'Danke.', $body);
     }
 
     private static function send_finance_receipt_email(int $finance_id, bool $force = false): bool
@@ -10824,6 +11375,10 @@ self.addEventListener('fetch', event => {
             return;
         }
 
+        // Neues Dashboard: Paten, Finanzen, neue Patenschaften, Anfragen und Support auf einen Blick.
+        self::render_sod_dashboard();
+        return;
+
         echo '<div class="sod-dashboard-panel">';
         echo '<div class="sod-dashboard-panel-head">';
         printf('<h2>%s</h2>', esc_html(self::org()['name'] . ' Verwaltung'));
@@ -10846,6 +11401,322 @@ self.addEventListener('fetch', event => {
         self::dashboard_panel_section('Sicherheit & Datenschutz', 'Löschfristen, Datenschutzseite und sichere Einstellungen im Blick behalten.', [self::class, 'dashboard_compliance_widget']);
         self::dashboard_panel_section('Alle Funktionen', 'Direkte Sprungmarken zu allen freigeschalteten SOD-Bereichen.', [self::class, 'dashboard_functions_widget']);
         echo '</div>';
+    }
+
+    /** Alle bisherigen Dashboard-Kaesten (SOD, WordPress, andere Plugins) ausblenden - das neue Dashboard steht oben. */
+    public static function clear_dashboard_for_sod(): void
+    {
+        if (!self::can_access_sod_dashboard()) {
+            return;
+        }
+        global $wp_meta_boxes;
+        $wp_meta_boxes['dashboard'] = [];
+        remove_action('welcome_panel', 'wp_welcome_panel');
+    }
+
+    private static function sponsor_monthly_value(int $sponsor_id): float
+    {
+        $amount = self::numeric_quantity((string)get_post_meta($sponsor_id, 'sod_sponsor_amount', true));
+        $interval = (string)get_post_meta($sponsor_id, 'sod_sponsor_interval', true);
+        $divisor = ['vierteljaehrlich' => 3, 'halbjaehrlich' => 6, 'jaehrlich' => 12, 'einmalig' => 0][$interval] ?? 1;
+        return $divisor > 0 ? $amount / $divisor : 0.0;
+    }
+
+    private static function dash_age(string $mysql_date): string
+    {
+        $ts = strtotime($mysql_date);
+        if (!$ts) {
+            return '';
+        }
+        $diff = max(0, current_time('timestamp') - $ts);
+        if ($diff < HOUR_IN_SECONDS) {
+            return 'vor ' . max(1, (int)floor($diff / MINUTE_IN_SECONDS)) . ' Min.';
+        }
+        if ($diff < DAY_IN_SECONDS) {
+            $h = (int)floor($diff / HOUR_IN_SECONDS);
+            return 'vor ' . $h . ' Stunde' . ($h === 1 ? '' : 'n');
+        }
+        $d = (int)floor($diff / DAY_IN_SECONDS);
+        if ($d === 1) {
+            return 'gestern';
+        }
+        return $d < 7 ? 'vor ' . $d . ' Tagen' : date_i18n('d.m.Y', $ts);
+    }
+
+    private static function render_sod_dashboard(): void
+    {
+        $user = wp_get_current_user();
+        $hour = (int)current_time('G');
+        $greeting = $hour < 11 ? 'Guten Morgen' : ($hour < 18 ? 'Guten Tag' : 'Guten Abend');
+        $name = trim((string)$user->first_name) !== '' ? trim((string)$user->first_name) : (string)$user->display_name;
+        $name = mb_strtoupper(mb_substr($name, 0, 1)) . mb_substr($name, 1);
+        $money = static fn (float $v): string => self::format_quantity($v) . ' €';
+        $see_dogs = self::can_access_sod_dogs();
+        $see_finance = self::can_access_sod_finances();
+        $year = (int)current_time('Y');
+        $month = (int)current_time('n');
+        $now = current_time('timestamp');
+
+        // Paten
+        $sponsor_channels = ['paypal' => ['PayPal-Abo', 0, 0.0], 'dauerauftrag' => ['Dauerauftrag (Bank)', 0, 0.0]];
+        $active_count = 0;
+        $active_sum = 0.0;
+        $missing_count = 0;
+        if ($see_dogs) {
+            $active = get_posts(['post_type' => 'sod_sponsor', 'post_status' => 'any', 'numberposts' => -1, 'fields' => 'ids', 'meta_query' => [['key' => 'sod_sponsor_status', 'value' => 'aktiv']]]);
+            foreach ($active as $sponsor_id) {
+                $method = (string)get_post_meta((int)$sponsor_id, 'sod_sponsor_payment_method', true);
+                $method = isset($sponsor_channels[$method]) ? $method : ($method === 'ueberweisung' ? 'dauerauftrag' : 'paypal');
+                $value = self::sponsor_monthly_value((int)$sponsor_id);
+                $sponsor_channels[$method][1]++;
+                $sponsor_channels[$method][2] += $value;
+                $active_count++;
+                $active_sum += $value;
+            }
+            $missing_count = count(self::sponsors_missing_finance_entry($year, $month));
+        }
+
+        // Anfragen und Support
+        $open_apps = $see_dogs ? get_posts(['post_type' => 'sod_application', 'post_status' => 'any', 'numberposts' => -1, 'fields' => 'ids', 'meta_query' => [['key' => 'sod_application_status', 'value' => 'beendet', 'compare' => '!=']]]) : [];
+        $old_apps = 0;
+        foreach ($open_apps as $app_id) {
+            if ($now - (int)get_post_time('U', false, (int)$app_id) > 3 * DAY_IN_SECONDS) {
+                $old_apps++;
+            }
+        }
+        $open_support = current_user_can('manage_options') || $see_dogs
+            ? get_posts(['post_type' => 'sod_support', 'post_status' => 'any', 'numberposts' => -1, 'orderby' => 'date', 'order' => 'ASC', 'meta_query' => ['relation' => 'OR', ['key' => 'sod_support_status', 'value' => ['offen', 'in_arbeit'], 'compare' => 'IN'], ['key' => 'sod_support_status', 'compare' => 'NOT EXISTS']]])
+            : [];
+
+        // Finanzen
+        $report = $see_finance ? self::finance_report_rows($year) : ['months' => [], 'split' => []];
+        $split = $report['split'] ?? [];
+        $kind_total = static function (array $split, string $kind): float {
+            return array_sum(array_map(static fn (array $c): float => (float)($c['sum'] ?? 0), (array)($split[$kind] ?? [])));
+        };
+        $month_row = $report['months'][$month] ?? ['einnahmen' => 0.0, 'split' => []];
+        $month_split = (array)($month_row['split'] ?? []);
+        $month_spenden = array_sum((array)($month_split['einmalspende'] ?? []));
+        $month_paten = array_sum((array)($month_split['patenschaft'] ?? []));
+        $year_in = array_sum(array_column($report['months'], 'einnahmen'));
+        $month_names = [1 => 'Jän', 2 => 'Feb', 3 => 'Mär', 4 => 'Apr', 5 => 'Mai', 6 => 'Jun', 7 => 'Jul', 8 => 'Aug', 9 => 'Sep', 10 => 'Okt', 11 => 'Nov', 12 => 'Dez'];
+        $chart = [];
+        if ($see_finance) {
+            $prev = $month < 6 ? self::finance_report_rows($year - 1) : ['months' => []];
+            for ($i = 5; $i >= 0; $i--) {
+                $m = $month - $i;
+                $rows = $m >= 1 ? $report['months'] : $prev['months'];
+                $m = $m >= 1 ? $m : $m + 12;
+                $sp = (array)($rows[$m]['split'] ?? []);
+                $chart[] = [
+                    'label' => $month_names[$m],
+                    'spende' => array_sum((array)($sp['einmalspende'] ?? [])),
+                    'paypal' => (float)($sp['patenschaft']['paypal'] ?? 0) + (float)($sp['patenschaft']['mollie'] ?? 0) + (float)($sp['patenschaft']['sonstige'] ?? 0),
+                    'bank' => (float)($sp['patenschaft']['bank'] ?? 0),
+                ];
+            }
+        }
+        $chart_max = max(1.0, ...array_map(static fn (array $c): float => $c['spende'] + $c['paypal'] + $c['bank'], $chart ?: [['spende' => 0, 'paypal' => 0, 'bank' => 0]]));
+        $channels = self::finance_report_channels($split);
+        $channel_labels = ['paypal' => 'PayPal', 'bank' => 'Bank', 'mollie' => 'Mollie', 'sonstige' => 'Sonstige'];
+
+        $pill = static function (string $label, string $tone): string {
+            $tones = ['new' => 'background:#e7f5ea;color:#006b1d', 'open' => 'background:#fcf0f1;color:#b32d2e', 'wait' => 'background:#fff8e5;color:#8a6100', 'done' => 'background:#f0f0f1;color:#646970'];
+            return '<span class="sod-dash-pill" style="' . ($tones[$tone] ?? $tones['done']) . '">' . esc_html($label) . '</span>';
+        };
+        ?>
+        <style>
+            .sod-dash { margin: 16px 20px 24px 0; max-width: 1400px; color: #1d2327; }
+            .sod-dash h1 { font-size: 23px; font-weight: 400; margin: 0 0 2px; padding: 0; }
+            .sod-dash .sod-dash-sub { color: #646970; margin: 0 0 14px; }
+            .sod-dash-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 18px; }
+            .sod-dash-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-bottom: 16px; }
+            .sod-dash-kpi, .sod-dash-card { background: #fff; border: 1px solid #dcdcde; border-radius: 8px; }
+            .sod-dash-kpi { padding: 14px 16px; text-decoration: none; color: inherit; display: block; }
+            .sod-dash-kpi span { display: block; color: #646970; font-size: 12px; }
+            .sod-dash-kpi strong { display: block; font-size: 24px; font-weight: 600; margin: 2px 0; }
+            .sod-dash-kpi small { color: #646970; }
+            .sod-dash-kpi.is-alert strong { color: #d63638; }
+            .sod-dash-grid { display: grid; grid-template-columns: 1.25fr 1fr; gap: 16px; margin-bottom: 16px; }
+            .sod-dash-grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+            .sod-dash-card { padding: 16px 18px; }
+            .sod-dash-card h2 { font-size: 14px; margin: 0 0 12px; padding: 0; display: flex; justify-content: space-between; align-items: baseline; }
+            .sod-dash-card h2 a { font-size: 12px; font-weight: 400; text-decoration: none; }
+            .sod-dash-card table { width: 100%; border-collapse: collapse; }
+            .sod-dash-card th, .sod-dash-card td { text-align: left; padding: 6px 4px; border-bottom: 1px solid #f0f0f1; }
+            .sod-dash-card th { color: #646970; font-weight: 500; font-size: 12px; }
+            .sod-dash-card .r { text-align: right; white-space: nowrap; }
+            .sod-dash-card tr.total td { font-weight: 700; border-top: 2px solid #dcdcde; border-bottom: 0; }
+            .sod-dash-bar { height: 8px; background: #f0f0f1; border-radius: 4px; overflow: hidden; }
+            .sod-dash-bar i { display: block; height: 100%; background: #e4a91f; }
+            .sod-dash-list > div { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f0f0f1; }
+            .sod-dash-list > div:last-child { border-bottom: 0; }
+            .sod-dash-list a { font-weight: 600; text-decoration: none; }
+            .sod-dash-list small { display: block; color: #646970; }
+            .sod-dash-pill { display: inline-block; padding: 0 7px; border-radius: 10px; font-size: 11px; line-height: 18px; white-space: nowrap; }
+            .sod-dash-chart { display: flex; align-items: flex-end; gap: 10px; height: 120px; padding-top: 6px; }
+            .sod-dash-chart > div { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; height: 100%; }
+            .sod-dash-chart .stack { width: 100%; max-width: 38px; display: flex; flex-direction: column-reverse; border-radius: 4px 4px 0 0; overflow: hidden; min-height: 2px; background: #f0f0f1; }
+            .sod-dash-legend { display: flex; flex-wrap: wrap; gap: 14px; color: #646970; font-size: 12px; margin-top: 8px; }
+            .sod-dash-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+            .sod-dash-empty { color: #646970; margin: 4px 0; }
+            @media (max-width: 1100px) { .sod-dash-grid, .sod-dash-grid3 { grid-template-columns: 1fr; } }
+            body.index-php #dashboard-widgets-wrap { display: none; }
+        </style>
+        <div class="sod-dash">
+            <h1><?php echo esc_html($greeting . ', ' . $name); ?></h1>
+            <p class="sod-dash-sub"><?php echo esc_html(date_i18n('l, j. F Y')); ?> · <?php echo esc_html(self::org()['name']); ?> auf einen Blick</p>
+
+            <div class="sod-dash-actions">
+                <?php if ($see_dogs) : ?><a class="button button-primary" href="<?php echo esc_url(admin_url('post-new.php?post_type=sod_dog')); ?>">Hund anlegen</a><?php endif; ?>
+                <?php if ($see_finance) : ?><a class="button" href="<?php echo esc_url(admin_url('post-new.php?post_type=sod_finance')); ?>">Spende erfassen</a>
+                <a class="button" href="<?php echo esc_url(admin_url('edit.php?post_type=sod_dog&page=sod-finance-report')); ?>">Finanzbericht</a><?php endif; ?>
+                <?php if (current_user_can('edit_others_posts')) : ?><a class="button" href="<?php echo esc_url(admin_url('edit.php?post_type=sod_dog&page=sod-translations')); ?>">Übersetzungen</a><?php endif; ?>
+                <a class="button" href="<?php echo esc_url(home_url('/')); ?>" target="_blank" rel="noopener">Website ansehen</a>
+            </div>
+
+            <div class="sod-dash-kpis">
+                <?php if ($see_dogs) : ?>
+                    <a class="sod-dash-kpi" href="<?php echo esc_url(admin_url('edit.php?post_type=sod_sponsor')); ?>"><span>Aktive Paten</span><strong><?php echo (int)$active_count; ?></strong><small><?php echo esc_html($money($active_sum)); ?> pro Monat zugesagt</small></a>
+                <?php endif; ?>
+                <?php if ($see_finance) : ?>
+                    <a class="sod-dash-kpi" href="<?php echo esc_url(admin_url('edit.php?post_type=sod_dog&page=sod-finance-report')); ?>"><span>Einnahmen <?php echo esc_html(date_i18n('F')); ?></span><strong><?php echo esc_html($money((float)($month_row['einnahmen'] ?? 0))); ?></strong><small><?php echo esc_html($money($month_spenden) . ' Spenden · ' . $money($month_paten) . ' Patenschaften'); ?></small></a>
+                    <a class="sod-dash-kpi" href="<?php echo esc_url(admin_url('edit.php?post_type=sod_dog&page=sod-finance-report')); ?>"><span>Einnahmen <?php echo (int)$year; ?></span><strong><?php echo esc_html($money((float)$year_in)); ?></strong><small><?php echo esc_html($money($kind_total($split, 'einmalspende')) . ' Spenden · ' . $money($kind_total($split, 'patenschaft')) . ' Patenschaften'); ?></small></a>
+                <?php endif; ?>
+                <?php if ($see_dogs) : ?>
+                    <a class="sod-dash-kpi<?php echo count($open_apps) > 0 ? ' is-alert' : ''; ?>" href="<?php echo esc_url(admin_url('edit.php?post_type=sod_application')); ?>"><span>Offene Anfragen</span><strong><?php echo count($open_apps); ?></strong><small><?php echo $old_apps > 0 ? esc_html($old_apps . ' davon älter als 3 Tage') : 'alle aktuell'; ?></small></a>
+                <?php endif; ?>
+                <a class="sod-dash-kpi<?php echo $open_support ? ' is-alert' : ''; ?>" href="<?php echo esc_url(admin_url('edit.php?post_type=sod_support')); ?>"><span>Offene Support-Anfragen</span><strong><?php echo count($open_support); ?></strong><small><?php echo $open_support ? esc_html('älteste ' . self::dash_age((string)$open_support[0]->post_date)) : 'nichts offen'; ?></small></a>
+            </div>
+
+            <div class="sod-dash-grid">
+                <?php if ($see_dogs) : ?>
+                <div class="sod-dash-card">
+                    <h2>Paten &amp; Hunde <a href="<?php echo esc_url(admin_url('edit.php?post_type=sod_sponsor')); ?>">Alle Paten →</a></h2>
+                    <table>
+                        <thead><tr><th>Zahlungsweg</th><th class="r">Paten</th><th class="r">pro Monat</th></tr></thead>
+                        <tbody>
+                        <?php foreach ($sponsor_channels as [$label, $count, $sum]) : ?>
+                            <tr><td><?php echo esc_html($label); ?></td><td class="r"><?php echo (int)$count; ?></td><td class="r"><?php echo esc_html($money($sum)); ?></td></tr>
+                        <?php endforeach; ?>
+                        <tr class="total"><td>Gesamt</td><td class="r"><?php echo (int)$active_count; ?></td><td class="r"><?php echo esc_html($money($active_sum)); ?></td></tr>
+                        </tbody>
+                    </table>
+                    <p style="margin:16px 0 8px;font-weight:600">Hunde, die am dringendsten Paten suchen</p>
+                    <?php $needy = self::dogs_needing_sponsors_for_mail(3); ?>
+                    <?php if (!$needy) : ?><p class="sod-dash-empty">Alle Patenschaften sind gedeckt.</p><?php endif; ?>
+                    <table>
+                        <?php foreach ($needy as $item) : $sup = self::dog_support_summary($item['dog']->ID); ?>
+                            <tr>
+                                <td style="width:30%;font-weight:600"><a href="<?php echo esc_url((string)get_edit_post_link($item['dog']->ID, 'raw')); ?>" style="text-decoration:none"><?php echo esc_html($item['dog']->post_title); ?></a></td>
+                                <td><div class="sod-dash-bar"><i style="width:<?php echo (int)round($item['covered'] * 100); ?>%"></i></div></td>
+                                <td class="r" style="width:120px"><?php echo esc_html(self::format_quantity((float)$sup['secured']) . ' / ' . $money((float)$sup['target'])); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </table>
+                    <?php if ($missing_count > 0) : ?>
+                        <p style="margin:14px 0 0;color:#b32d2e">⚠ <?php echo (int)$missing_count; ?> Paten ohne Zahlung im <?php echo esc_html(date_i18n('F')); ?> <a href="<?php echo esc_url(admin_url('edit.php?post_type=sod_dog&page=sod-finance-report')); ?>#paten-ohne-zahlung">ansehen</a></p>
+                    <?php endif; ?>
+                </div>
+                <?php endif; ?>
+
+                <?php if ($see_finance) : ?>
+                <div class="sod-dash-card">
+                    <h2>Finanzen <?php echo (int)$year; ?> <a href="<?php echo esc_url(admin_url('edit.php?post_type=sod_dog&page=sod-finance-report')); ?>">Finanzbericht →</a></h2>
+                    <table>
+                        <thead><tr><th></th><?php foreach ($channels as $c) : ?><th class="r"><?php echo esc_html($channel_labels[$c]); ?></th><?php endforeach; ?><th class="r">Gesamt</th></tr></thead>
+                        <tbody>
+                        <?php foreach (['einmalspende' => 'Einmalspenden', 'patenschaft' => 'Patenschaften'] as $kind => $label) : ?>
+                            <tr><td><?php echo esc_html($label); ?></td><?php foreach ($channels as $c) : ?><td class="r"><?php echo esc_html($money((float)($split[$kind][$c]['sum'] ?? 0))); ?></td><?php endforeach; ?><td class="r"><?php echo esc_html($money($kind_total($split, $kind))); ?></td></tr>
+                        <?php endforeach; ?>
+                        <tr class="total"><td>Gesamt</td><?php foreach ($channels as $c) : ?><td class="r"><?php echo esc_html($money((float)($split['einmalspende'][$c]['sum'] ?? 0) + (float)($split['patenschaft'][$c]['sum'] ?? 0) + (float)($split['erstattung'][$c]['sum'] ?? 0))); ?></td><?php endforeach; ?><td class="r"><?php echo esc_html($money((float)$year_in)); ?></td></tr>
+                        </tbody>
+                    </table>
+                    <p style="margin:16px 0 4px;font-weight:600">Letzte 6 Monate</p>
+                    <div class="sod-dash-chart">
+                        <?php foreach ($chart as $c) : $total = $c['spende'] + $c['paypal'] + $c['bank']; ?>
+                            <div title="<?php echo esc_attr($c['label'] . ': ' . $money($total)); ?>">
+                                <small style="color:#646970"><?php echo $total > 0 ? esc_html(self::format_quantity($total)) : ''; ?></small>
+                                <div class="stack" style="height:<?php echo max(2, (int)round($total / $chart_max * 90)); ?>px">
+                                    <?php if ($total > 0) : ?>
+                                        <div style="background:#72aee6;height:<?php echo round($c['bank'] / $total * 100, 1); ?>%"></div>
+                                        <div style="background:#2271b1;height:<?php echo round($c['paypal'] / $total * 100, 1); ?>%"></div>
+                                        <div style="background:#e4a91f;height:<?php echo round($c['spende'] / $total * 100, 1); ?>%"></div>
+                                    <?php endif; ?>
+                                </div>
+                                <small><?php echo esc_html($c['label']); ?></small>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <div class="sod-dash-legend"><span><i style="background:#e4a91f"></i>Einmalspenden</span><span><i style="background:#2271b1"></i>Patenschaft PayPal</span><span><i style="background:#72aee6"></i>Patenschaft Bank</span></div>
+                </div>
+                <?php endif; ?>
+            </div>
+
+            <div class="sod-dash-grid3">
+                <?php if ($see_dogs) : ?>
+                <div class="sod-dash-card">
+                    <h2>Neueste Patenschaften <a href="<?php echo esc_url(admin_url('edit.php?post_type=sod_sponsor')); ?>">Alle →</a></h2>
+                    <div class="sod-dash-list">
+                        <?php
+                        $latest = get_posts(['post_type' => 'sod_sponsor', 'post_status' => 'any', 'numberposts' => 3, 'orderby' => 'date', 'order' => 'DESC']);
+                        $methods = self::sponsor_payment_method_options();
+                        $status_tone = ['aktiv' => ['aktiv', 'new'], 'ausstehend' => ['wartet auf Zahlung', 'wait'], 'inaktiv' => ['keine Zahlung', 'open'], 'pausiert' => ['pausiert', 'done'], 'beendet' => ['beendet', 'done']];
+                        if (!$latest) { echo '<p class="sod-dash-empty">Noch keine Patenschaften.</p>'; }
+                        foreach ($latest as $sp) :
+                            $dog_id = absint(get_post_meta($sp->ID, 'sod_sponsor_dog', true));
+                            $st = (string)get_post_meta($sp->ID, 'sod_sponsor_status', true);
+                            [$st_label, $st_tone] = $status_tone[$st] ?? [$st !== '' ? $st : 'offen', 'wait'];
+                            $method = (string)get_post_meta($sp->ID, 'sod_sponsor_payment_method', true);
+                            ?>
+                            <div><span><a href="<?php echo esc_url((string)get_edit_post_link($sp->ID, 'raw')); ?>"><?php echo esc_html((trim((string)get_the_title($sp)) !== '' ? get_the_title($sp) : 'Pate/Patin ohne Namen') . ($dog_id ? ' → ' . get_the_title($dog_id) : '')); ?></a>
+                                <small><?php echo esc_html(implode(' · ', array_filter([preg_replace('/ \(.*/', '', (string)($methods[$method] ?? $method)), self::format_quantity(self::numeric_quantity((string)get_post_meta($sp->ID, 'sod_sponsor_amount', true))) . ' € / Monat', self::dash_age((string)$sp->post_date)]))); ?></small></span>
+                                <?php echo $pill($st_label, $st_tone); ?></div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <div class="sod-dash-card">
+                    <h2>Anfragen <a href="<?php echo esc_url(admin_url('edit.php?post_type=sod_application')); ?>">Alle Anfragen →</a></h2>
+                    <div class="sod-dash-list">
+                        <?php
+                        $apps = get_posts(['post_type' => 'sod_application', 'post_status' => 'any', 'numberposts' => 4, 'orderby' => 'date', 'order' => 'DESC']);
+                        if (!$apps) { echo '<p class="sod-dash-empty">Keine Anfragen.</p>'; }
+                        foreach ($apps as $app) :
+                            $who = trim((string)get_post_meta($app->ID, 'first_name', true) . ' ' . mb_substr((string)get_post_meta($app->ID, 'last_name', true), 0, 1) . '.');
+                            $about = trim((string)get_post_meta($app->ID, 'interest', true) . ' ' . (string)get_post_meta($app->ID, 'dog_name', true));
+                            $done = (string)get_post_meta($app->ID, 'sod_application_status', true) === 'beendet';
+                            $replied = (int)get_comments_number($app->ID) > 0;
+                            ?>
+                            <div><span><a href="<?php echo esc_url((string)get_edit_post_link($app->ID, 'raw')); ?>"><?php echo esc_html(($who !== '.' ? $who : get_the_title($app)) . ($about !== '' ? ' – ' . $about : '')); ?></a>
+                                <small><?php echo esc_html(self::dash_age((string)$app->post_date)); ?></small></span>
+                                <?php echo $done ? $pill('erledigt', 'done') : ($replied ? $pill('beantwortet', 'wait') : $pill('neu', 'open')); ?></div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
+
+                <div class="sod-dash-card">
+                    <h2>Support-Anfragen <a href="<?php echo esc_url(admin_url('edit.php?post_type=sod_support')); ?>">Alle →</a></h2>
+                    <div class="sod-dash-list">
+                        <?php
+                        $tickets = get_posts(['post_type' => 'sod_support', 'post_status' => 'any', 'numberposts' => 4, 'orderby' => 'date', 'order' => 'DESC']);
+                        $support_labels = self::support_status_options();
+                        if (!$tickets) { echo '<p class="sod-dash-empty">Keine Support-Anfragen.</p>'; }
+                        foreach ($tickets as $t) :
+                            $st = (string)get_post_meta($t->ID, 'sod_support_status', true);
+                            $st = $st !== '' ? $st : 'offen';
+                            $who = (string)get_post_meta($t->ID, 'sod_support_name', true);
+                            ?>
+                            <div><span><a href="<?php echo esc_url((string)get_edit_post_link($t->ID, 'raw')); ?>"><?php echo esc_html(get_the_title($t)); ?></a>
+                                <small><?php echo esc_html(implode(' · ', array_filter([$who, self::dash_age((string)$t->post_date)]))); ?></small></span>
+                                <?php echo $pill($support_labels[$st] ?? $st, $st === 'erledigt' ? 'done' : ($st === 'in_arbeit' ? 'wait' : 'open')); ?></div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php
     }
 
     private static function dashboard_panel_section(string $title, string $description, callable $callback): void
@@ -12296,6 +13167,7 @@ self.addEventListener('fetch', event => {
                 'hint' => 'Für Transparenz: Spenden, Sachspenden, Tierarzt, Futter, Transport und Tierheim-Bau erfassen.',
                 'fields' => [
                     'sod_finance_type' => ['label' => 'Art', 'type' => 'select', 'options' => self::finance_type_options()],
+                    'sod_finance_kind' => ['label' => 'Art der Einnahme (für den Finanzbericht)', 'type' => 'select', 'options' => self::finance_kind_options()],
                     'sod_finance_date' => ['label' => 'Datum', 'type' => 'date'],
                     'sod_finance_amount' => ['label' => 'Betrag / Menge'],
                     'sod_finance_category' => ['label' => 'Zweck', 'type' => 'select', 'options' => self::finance_category_options()],
@@ -12530,6 +13402,76 @@ self.addEventListener('fetch', event => {
             'verwaltung' => 'Verwaltung',
             'sonstiges' => 'Sonstiges',
         ];
+    }
+
+    private static function finance_kind_options(): array
+    {
+        return [
+            '' => 'Automatisch erkennen',
+            'einmalspende' => 'Einmalspende',
+            'patenschaft' => 'Patenschaft',
+        ];
+    }
+
+    /** Einnahmen-Art fuer den Finanzbericht: einmalspende, patenschaft oder erstattung (29.09.2026). */
+    private static function finance_income_kind(int $post_id): string
+    {
+        if ((string)get_post_meta($post_id, 'sod_finance_type', true) === 'erstattung') {
+            return 'erstattung';
+        }
+        $kind = (string)get_post_meta($post_id, 'sod_finance_kind', true);
+        if ($kind === 'einmalspende' || $kind === 'patenschaft') {
+            return $kind;
+        }
+        if (absint(get_post_meta($post_id, 'sod_finance_sponsor_initial_payment_id', true)) > 0) {
+            return 'patenschaft';
+        }
+        // Automatisch erfasste Patenschaftszahlungen (PayPal-Abo, Dauerauftrag, Mollie) heissen "Patenschaft - Name".
+        return stripos(ltrim((string)get_post_field('post_title', $post_id)), 'Patenschaft') === 0 ? 'patenschaft' : 'einmalspende';
+    }
+
+    /** Zahlungsweg: paypal, bank, mollie oder sonstige. */
+    private static function finance_channel(int $post_id): string
+    {
+        $method = (string)get_post_meta($post_id, 'sod_finance_payment_method', true);
+        if ($method === 'paypal' || ($method === '' && trim((string)get_post_meta($post_id, 'sod_finance_paypal_txn_id', true)) !== '')) {
+            return 'paypal';
+        }
+        if ($method === 'dauerauftrag' || $method === 'ueberweisung') {
+            return 'bank';
+        }
+        if ($method === 'mollie' || ($method === '' && trim((string)get_post_meta($post_id, 'sod_finance_mollie_payment_id', true)) !== '')) {
+            return 'mollie';
+        }
+        return 'sonstige';
+    }
+
+    private static function finance_channel_labels(): array
+    {
+        return ['paypal' => 'PayPal', 'bank' => 'Banküberweisung', 'mollie' => 'Mollie (Karte / Bankeinzug)', 'sonstige' => 'Bar / Sonstige'];
+    }
+
+    private static function finance_kind_labels(): array
+    {
+        return ['einmalspende' => 'Einmalspenden', 'patenschaft' => 'Patenschaften', 'erstattung' => 'Erstattungen'];
+    }
+
+    /** Welche Zahlungswege im Bericht als Spalte erscheinen: PayPal und Bank immer, die anderen nur mit Betraegen. */
+    private static function finance_report_channels(array $split): array
+    {
+        $channels = [];
+        foreach (array_keys(self::finance_channel_labels()) as $channel) {
+            $used = false;
+            foreach ($split as $by_channel) {
+                if (($by_channel[$channel]['count'] ?? 0) > 0) {
+                    $used = true;
+                }
+            }
+            if ($used || $channel === 'paypal' || $channel === 'bank') {
+                $channels[] = $channel;
+            }
+        }
+        return $channels;
     }
 
     private static function finance_payment_method_options(): array

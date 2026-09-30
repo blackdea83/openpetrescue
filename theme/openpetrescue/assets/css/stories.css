@@ -1,0 +1,182 @@
+/* Schicksale (inc/stories.php) – Uebersicht, Geschichte, Startseiten-Teaser. Eigene Klassen sodst-*. */
+.sodst-page, .sodst-teaser-section, .sodst-dog {
+  --sodst-bg: #0b141b; --sodst-surface: #101c26; --sodst-line: rgba(255,255,255,.08);
+  --sodst-text: #f8fafc; --sodst-muted: #94a3b8; --sodst-gold: #f3c74f; --sodst-gold-d: #e4a91f;
+  --sodst-red: #e11d48; --sodst-green: #10b981;
+  color: var(--sodst-text);
+}
+.sodst-page { background: var(--sodst-bg); padding: 110px 0 80px; }
+.sodst-teaser-section { background: var(--sodst-bg); padding: 70px 0; }
+.sodst-wrap { max-width: 1160px; margin: 0 auto; padding: 0 20px; }
+.sodst-page h1, .sodst-page h2, .sodst-page h3, .sodst-teaser h2 { color: var(--sodst-text); letter-spacing: -.025em; line-height: 1.12; margin: 0; }
+.sodst-eyebrow { font-size: .72rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--sodst-gold); margin: 0 0 10px; }
+.sodst-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+.sodst-page [hidden] { display: none !important; }
+
+/* Fortschritt */
+.sodst-progress { background: rgba(255,255,255,.06); border-radius: 14px; padding: 12px 14px; margin-top: 4px; }
+.sodst-progress-top { display: flex; justify-content: space-between; gap: 10px; font-size: .84rem; font-weight: 700; margin-bottom: 8px; }
+.sodst-progress-top span:last-child { color: var(--sodst-gold); white-space: nowrap; }
+.sodst-bar { display: block; height: 9px; border-radius: 999px; background: rgba(255,255,255,.1); overflow: hidden; }
+.sodst-bar i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--sodst-gold-d), var(--sodst-gold)); }
+.sodst-progress small { display: block; color: var(--sodst-muted); font-size: .76rem; margin-top: 6px; }
+
+/* Uebersicht */
+.sodst-ov-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 22px; flex-wrap: wrap; margin-bottom: 26px; }
+.sodst-ov-head h1 { font-size: clamp(2.1rem, 4.5vw, 3.2rem); font-weight: 800; }
+.sodst-lead { color: rgba(248,250,252,.74); max-width: 600px; margin: 12px 0 0; font-size: 1.05rem; line-height: 1.65; }
+.sodst-tabs { display: inline-flex; background: var(--sodst-surface); border: 1px solid var(--sodst-line); border-radius: 14px; padding: 4px; gap: 4px; }
+.sodst-tabs button { border: 0; background: transparent; color: var(--sodst-muted); font: 700 .92rem/1 inherit; padding: 11px 16px; border-radius: 10px; cursor: pointer; }
+.sodst-tabs button span { opacity: .7; margin-left: 4px; }
+.sodst-tabs button.is-on { background: var(--sodst-gold); color: #0b141b; }
+.sodst-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 18px; }
+.sodst-card { background: var(--sodst-surface); border: 1px solid var(--sodst-line); border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; }
+.sodst-card-media { position: relative; display: block; aspect-ratio: 4 / 3; overflow: hidden; background: #000; }
+.sodst-card-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; filter: brightness(.88); transition: transform .5s ease; }
+.sodst-card:hover .sodst-card-media img { transform: scale(1.03); }
+.sodst-badge { position: absolute; top: 12px; left: 12px; font-size: .7rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; padding: 5px 9px; border-radius: 8px; }
+.sodst-badge-need { background: var(--sodst-red); color: #fff; }
+.sodst-badge-home { background: var(--sodst-gold); color: #0b141b; }
+.sodst-badge-happy { background: var(--sodst-green); color: #04120c; }
+.sodst-count { position: absolute; right: 12px; bottom: 12px; font-size: .75rem; font-weight: 700; background: rgba(0,0,0,.72); color: #fff; padding: 5px 9px; border-radius: 8px; }
+.sodst-card-body { padding: 18px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.sodst-card-body h3 { font-size: 1.35rem; font-weight: 800; }
+.sodst-card-body p { margin: 0; color: rgba(248,250,252,.74); font-size: .93rem; line-height: 1.6; }
+.sodst-card-body .sodst-actions { margin-top: auto; padding-top: 4px; }
+.sodst-empty { grid-column: 1 / -1; color: var(--sodst-muted); text-align: center; padding: 30px; border: 1px dashed var(--sodst-line); border-radius: 16px; }
+
+/* Geschichte */
+.sodst-back { display: inline-block; color: var(--sodst-muted); text-decoration: none; font-weight: 700; font-size: .9rem; margin-bottom: 16px; }
+.sodst-back:hover { color: var(--sodst-gold); }
+.sodst-hero { position: relative; border-radius: 24px; overflow: hidden; min-height: 440px; display: flex; align-items: flex-end; background: #000; border: 1px solid var(--sodst-line); }
+.sodst-hero img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 30%; filter: brightness(.55); }
+.sodst-hero-body { position: relative; padding: 40px; max-width: 760px; }
+.sodst-hero h1 { font-size: clamp(2rem, 5vw, 3.4rem); font-weight: 800; margin-bottom: 12px; }
+.sodst-hero-body p:last-child { color: rgba(248,250,252,.86); margin: 0; font-size: 1.02rem; }
+.sodst-main, .sodst-side { min-width: 0; }
+.sodst-layout { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 34px; margin-top: 32px; align-items: start; }
+.sodst-tldr { background: rgba(243,199,79,.08); border: 1px solid rgba(243,199,79,.25); border-radius: 16px; padding: 16px 18px; margin-bottom: 30px; }
+.sodst-tldr b { color: var(--sodst-gold); font-size: .76rem; letter-spacing: .1em; text-transform: uppercase; }
+.sodst-tldr p { margin: 6px 0 0; line-height: 1.65; }
+.sodst-chapter { position: relative; padding: 0 0 36px 34px; margin-left: 12px; border-left: 2px solid rgba(243,199,79,.25); }
+.sodst-chapter::before { content: attr(data-n); position: absolute; left: -15px; top: -2px; width: 28px; height: 28px; border-radius: 50%; background: var(--sodst-gold); color: #0b141b; font-weight: 800; font-size: .85rem; display: grid; place-items: center; }
+.sodst-chapter.is-now { border-left-color: transparent; }
+.sodst-chapter.is-now::before { background: var(--sodst-red); color: #fff; box-shadow: 0 0 0 6px rgba(225,29,72,.2); }
+.sodst-chapter.is-happy::before { background: var(--sodst-green); box-shadow: 0 0 0 6px rgba(16,185,129,.2); }
+.sodst-chapter-date { font-size: .74rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--sodst-muted); }
+.sodst-chapter h2 { font-size: 1.5rem; font-weight: 800; margin: 4px 0 12px; }
+.sodst-chapter p { color: rgba(248,250,252,.85); line-height: 1.75; margin: 0 0 14px; }
+.sodst-quote { display: flex; gap: 12px; align-items: flex-start; background: var(--sodst-surface); border: 1px solid var(--sodst-line); border-radius: 16px; padding: 14px 16px; margin: 6px 0 16px; }
+.sodst-quote blockquote { margin: 0; }
+.sodst-quote blockquote p { margin: 0; font-style: italic; }
+.sodst-quote figcaption { color: var(--sodst-gold); font-weight: 700; font-size: .78rem; margin-top: 4px; }
+.sodst-avatar { flex: 0 0 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #204060, #0b1b29); display: grid; place-items: center; font-weight: 800; color: var(--sodst-gold); border: 2px solid var(--sodst-gold); }
+.sodst-mid-cta { background: linear-gradient(135deg, #17324a, #0b1824); border: 1px solid rgba(243,199,79,.35); border-radius: 18px; padding: 18px 20px; margin: 0 0 36px 46px; display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; }
+.sodst-mid-cta p { margin: 0; font-weight: 700; }
+
+/* Shorts */
+.sodst-shorts { display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 12px; margin: 6px 0 4px; scroll-snap-type: x mandatory; }
+.sodst-short { position: relative; flex: 0 0 136px; aspect-ratio: 9 / 16; border-radius: 14px; overflow: hidden; background: #000; color: #fff; text-decoration: none; scroll-snap-align: start; border: 1px solid var(--sodst-line); }
+.sodst-short img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: brightness(.72); transition: filter .3s; }
+.sodst-short:hover img, .sodst-short:focus-visible img { filter: brightness(.9); }
+.sodst-short-play { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -60%); width: 42px; height: 42px; border-radius: 50%; background: rgba(243,199,79,.95); color: #0b141b; display: grid; place-items: center; font-size: .9rem; padding-left: 3px; }
+.sodst-short-len { position: absolute; top: 8px; right: 8px; font-size: .68rem; font-weight: 700; background: rgba(0,0,0,.7); padding: 2px 6px; border-radius: 5px; }
+.sodst-short-t { position: absolute; left: 0; right: 0; bottom: 0; padding: 24px 8px 8px; background: linear-gradient(transparent, rgba(0,0,0,.9)); font-size: .74rem; font-weight: 700; line-height: 1.25; }
+.sodst-short-t small { display: block; color: var(--sodst-gold); margin-top: 2px; }
+
+.sodst-short.is-wide { flex-basis: 300px; aspect-ratio: 16 / 9; }
+.sodst-short.is-wide .sodst-short-play { transform: translate(-50%, -50%); }
+
+/* Zusatz-Bereiche Tierheim / Verbesserungen */
+.sodst-extra { margin-top: 56px; padding-top: 34px; border-top: 1px solid var(--sodst-line); }
+.sodst-extra-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+.sodst-extra-head h2 { font-size: clamp(1.6rem, 3.4vw, 2.2rem); font-weight: 800; }
+.sodst-extra-head .sodst-lead { margin-top: 8px; font-size: 1rem; }
+.sodst-extra .sodst-short { flex-basis: 150px; }
+.sodst-extra .sodst-short.is-wide { flex-basis: 320px; }
+
+/* Seitenleiste */
+.sodst-side { position: sticky; top: 100px; display: flex; flex-direction: column; gap: 14px; }
+.sodst-box { background: var(--sodst-surface); border: 1px solid var(--sodst-line); border-radius: 20px; padding: 20px; }
+.sodst-box h3 { font-size: 1.15rem; font-weight: 800; margin-bottom: 6px; }
+.sodst-box p { color: rgba(248,250,252,.74); font-size: .9rem; margin: 0 0 12px; }
+.sodst-box .btn { width: 100%; margin-top: 10px; justify-content: center; }
+.sodst-mini { display: flex; gap: 10px; align-items: center; text-decoration: none; color: inherit; margin-bottom: 10px; }
+.sodst-mini img { width: 52px; height: 52px; border-radius: 12px; object-fit: cover; }
+.sodst-mini > span { flex: 1; }
+.sodst-mini .sodst-bar { height: 7px; margin: 4px 0 2px; }
+.sodst-mini small { color: var(--sodst-muted); font-size: .75rem; }
+.sodst-share { display: flex; gap: 8px; }
+.sodst-share a, .sodst-share button { flex: 1; text-align: center; text-decoration: none; font: 800 .8rem/1.2 inherit; padding: 10px 6px; border-radius: 10px; border: 0; background: rgba(255,255,255,.08); color: #fff; cursor: pointer; }
+.sodst-share .is-wa { background: #128c4a; }
+.sodst-share .is-fb { background: #1b4fb8; }
+
+/* Teaser */
+.sodst-teaser { border-radius: 24px; overflow: hidden; min-height: 440px; display: grid; grid-template-columns: 1.05fr 1fr; background: #050a0e; border: 1px solid var(--sodst-line); }
+.sodst-teaser-media { position: relative; min-height: 320px; display: block; }
+.sodst-teaser-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 30%; filter: brightness(.82); }
+.sodst-teaser-media::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent 45%, #050a0e); }
+.sodst-teaser-body { padding: 40px; display: flex; flex-direction: column; justify-content: center; gap: 16px; }
+.sodst-teaser h2 { font-size: clamp(1.8rem, 3.4vw, 2.6rem); font-weight: 800; }
+.sodst-teaser-quote { font-size: 1.05rem; line-height: 1.6; color: rgba(248,250,252,.86); border-left: 3px solid var(--sodst-gold); padding-left: 14px; margin: 0; font-style: italic; }
+.sodst-teaser-quote small { display: block; font-style: normal; color: var(--sodst-gold); font-weight: 700; font-size: .8rem; margin-top: 6px; }
+.sodst-teaser-summary { color: rgba(248,250,252,.8); margin: 0; line-height: 1.65; }
+.sodst-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.sodst-chips span { font-size: .74rem; font-weight: 700; padding: 4px 9px; border-radius: 999px; background: rgba(255,255,255,.07); color: var(--sodst-muted); }
+.sodst-chips span.is-on { background: rgba(243,199,79,.16); color: var(--sodst-gold); }
+
+/* Startseite: weitere Schicksale */
+.sodst-more { margin-top: 26px; }
+.sodst-more-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+.sodst-more-head h3 { margin: 0; font-size: 1.3rem; font-weight: 800; color: var(--sodst-text); }
+.sodst-more-head a { color: var(--sodst-gold); font-weight: 700; text-decoration: none; white-space: nowrap; }
+.sodst-more-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+.sodst-mini-card { display: flex; flex-direction: column; background: var(--sodst-surface); border: 1px solid var(--sodst-line); border-radius: 18px; overflow: hidden; text-decoration: none; color: var(--sodst-text); transition: transform .25s ease, border-color .25s ease; }
+.sodst-mini-card:hover { transform: translateY(-3px); border-color: rgba(243,199,79,.4); }
+.sodst-mini-media { position: relative; display: block; aspect-ratio: 16 / 10; overflow: hidden; background: #000; }
+.sodst-mini-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 30%; filter: brightness(.88); }
+.sodst-mini-body { display: flex; flex-direction: column; gap: 6px; padding: 14px 16px 16px; flex: 1; }
+.sodst-mini-body strong { font-size: 1.15rem; font-weight: 800; }
+.sodst-mini-title { color: rgba(248,250,252,.72); font-size: .88rem; line-height: 1.45; }
+.sodst-mini-body .sodst-bar { height: 7px; margin-top: 4px; }
+.sodst-mini-body small { color: var(--sodst-muted); font-size: .76rem; }
+.sodst-mini-link { margin-top: auto; padding-top: 6px; color: var(--sodst-gold); font-weight: 700; font-size: .88rem; }
+@media (max-width: 700px) {
+  .sodst-more-row { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; }
+  .sodst-mini-card { flex: 0 0 76%; scroll-snap-align: start; }
+}
+
+/* Hundeseite */
+.sodst-dog { margin: 36px 0 28px; padding-top: 30px; border-top: 1px solid var(--sodst-line); }
+.sodst-dog-title { font-size: clamp(1.6rem, 3.4vw, 2.2rem); font-weight: 800; line-height: 1.15; margin: 0 0 18px; color: var(--sodst-text); }
+.sodst-dog .sodst-chapter h3 { font-size: 1.3rem; font-weight: 800; margin: 4px 0 10px; color: var(--sodst-text); }
+.sodst-dog-foot { display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 6px; }
+.sodst-dog-foot .sodst-share { flex: 1 1 300px; max-width: 420px; }
+.sodst-dog-playlist { color: var(--sodst-gold); font-weight: 700; text-decoration: none; }
+
+/* Video-Popup */
+.sodst-dialog { position: fixed; inset: 0; margin: auto; height: fit-content; padding: 0; border: 1px solid rgba(243,199,79,.35); border-radius: 18px; background: #0b141b; color: #f8fafc; width: min(400px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: hidden; }
+.sodst-dialog::backdrop { background: rgba(3,8,12,.85); }
+.sodst-dialog-body { padding: 50px 12px 12px; }
+.sodst-dialog-body iframe { display: block; width: 100%; aspect-ratio: 9 / 16; max-height: calc(100vh - 110px); border: 0; border-radius: 12px; background: #000; }
+.sodst-dialog.is-wide { width: min(960px, calc(100vw - 32px)); }
+.sodst-dialog.is-wide .sodst-dialog-body iframe { aspect-ratio: 16 / 9; max-height: calc(100vh - 110px); }
+.sodst-dialog-close { position: absolute; top: 8px; right: 10px; width: 36px; height: 36px; border: 0; border-radius: 50%; background: rgba(255,255,255,.08); color: #f3c74f; font-size: 26px; line-height: 1; cursor: pointer; }
+.sodst-dialog-consent { padding: 6px 12px 16px; text-align: center; }
+.sodst-dialog-consent p { color: rgba(248,250,252,.8); line-height: 1.6; font-size: .95rem; margin: 0 0 16px; }
+
+@media (max-width: 900px) {
+  .sodst-layout { grid-template-columns: minmax(0, 1fr); }
+  .sodst-side { position: static; }
+  .sodst-teaser { grid-template-columns: 1fr; }
+  .sodst-teaser-media::after { background: linear-gradient(180deg, transparent 45%, #050a0e); }
+  .sodst-teaser-body { padding: 24px; }
+  .sodst-hero { min-height: 360px; }
+  .sodst-hero-body { padding: 24px; }
+  .sodst-mid-cta { margin-left: 0; }
+  .sodst-page { padding-top: 90px; }
+}
+
+/* Vorschau-Hinweis fuer das Team (solange nicht oeffentlich) */
+.sodst-preview-badge { display: inline-block; margin: 0 0 16px; padding: 6px 12px; border-radius: 999px; background: #e11d48; color: #fff; font-size: .78rem; font-weight: 800; letter-spacing: .03em; }
+.sodst-dog .sodst-preview-badge, .sod-dog-detail .sodst-preview-badge { margin-top: 30px; }
